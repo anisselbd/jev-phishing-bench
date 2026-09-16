@@ -1,0 +1,37 @@
+{
+  "measured_at": "2026-09-16T21:37:01.586077+00:00",
+  "machine": "macOS-27.0-arm64-arm-64bit-Mach-O",
+  "note": "cold = fresh connection per probe (DNS + TCP + TLS + one tiny GET); warm = reused keep-alive connection, as the runners do",
+  "hosts": {
+    "typesafe": {
+      "url": "https://api.typesafe.ai/",
+      "n": 20,
+      "last_status": 404,
+      "cold": {
+        "p50_s": 0.5294340624986944,
+        "min_s": 0.5096973340005206,
+        "p95_s": 0.5397915829998965
+      },
+      "warm": {
+        "p50_s": 0.1629911460004223,
+        "min_s": 0.16039599999930942,
+        "p95_s": 0.16819929200210026
+      }
+    },
+    "llm": {
+      "url": "https://generativelanguage.googleapis.com/",
+      "n": 20,
+      "last_status": 404,
+      "cold": {
+        "p50_s": 0.07907781200083264,
+        "min_s": 0.07129887499831966,
+        "p95_s": 0.09323587499966379
+      },
+      "warm": {
+        "p50_s": 0.018402457999400212,
+        "min_s": 0.01335754200044903,
+        "p95_s": 0.03889612499915529
+      }
+    }
+  }
+}
