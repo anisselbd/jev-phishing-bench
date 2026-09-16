@@ -65,12 +65,11 @@ Une requête par email, `state` en objet JSON avec les champs natifs du dataset 
 - Extension gratuite : deux formulations alternatives de la question verdict dans le même appel pour mesurer la sensibilité de Jev à la formulation.
 
 ### Baseline LLM
-- `gemini-3-flash-preview` via l'offre gratuite Google AI Studio, endpoint compatible OpenAI (`https://generativelanguage.googleapis.com/v1beta/openai/`). C'est l'identifiant exact de la grille publiée (`google/gemini-3-flash-preview`), sorti avant le dataset. Prix catalogue vérifiés le 17 septembre 2026 sur ai.google.dev/gemini-api/docs/pricing : 0,50 $ en entrée et 3,00 $ en sortie par million de tokens. Gemini 2.5 Flash est en tête de la grille mais retiré le 16 octobre 2026.
-- La couche compatible OpenAI de Google ne renvoie pas le détail des tokens de raisonnement (`total_tokens` = entrée + sortie), donc le coût LLM calculé est une borne basse. À dire dans le rapport et le README.
-- Repli si le quota bloque : Groq avec Llama 4 Scout, lui aussi dans la grille.
-- Client générique compatible OpenAI configuré par `.env` : `LLM_BASE_URL`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_PRICE_IN`, `LLM_PRICE_OUT` (prix catalogue en dollars par million de tokens, toujours renseignés même en offre gratuite).
-- Prompt système "balanced" des auteurs repris mot pour mot, seule la ligne de format de réponse change : JSON `{"click": 0|1, "phishing_probability": 0..1}`. Température 0. Le thinking ne peut pas être coupé sur les modèles Gemini 3 (doc de la couche compatible OpenAI), il est donc réglé au minimum disponible via `LLM_EXTRA_BODY={"reasoning_effort": "low"}` : configuration la plus favorable au LLM sur latence et coût.
-- Les JSON invalides sont comptés comme erreurs de format, métrique publiée, impossible côté Jev.
+- **Claude Haiku 4.5** (`claude-haiku-4-5`) via l'API Messages native d'Anthropic en HTTP direct, sans thinking. Présent dans la grille publiée sous `anthropic/claude-haiku-4.5`, modèle courant de la gamme rapide et bon marché, API payante donc sans plafond d'offre gratuite. Prix catalogue : 1,00 $ en entrée et 5,00 $ en sortie par million de tokens. Environ 1 dollar pour le run complet.
+- Historique du choix : Gemini 3 Flash preview via l'offre gratuite Google AI Studio a été tenté le 16 septembre 2026 mais 10 requêtes par minute et des 503 "high demand" en rafale donnaient 14 heures de run. 9 réponses Gemini sont conservées dans `results/raw/llm_gemini-3-flash-preview_pass1.jsonl` pour une éventuelle seconde baseline (clé Gemini à remettre dans `.env`, `LLM_PROVIDER=openai`).
+- Client générique configuré par `.env` : `LLM_PROVIDER` (`anthropic` ou `openai`), `LLM_BASE_URL`, `LLM_API_KEY` (repli sur `ANTHROPIC_API_KEY`), `LLM_MODEL`, `LLM_PRICE_IN`, `LLM_PRICE_OUT`, `LLM_RPM`, `LLM_EXTRA_BODY`, `LLM_GRID_MODEL`. Sorties dans `results/raw/llm_<model>_pass<N>.jsonl`.
+- Prompt système "balanced" des auteurs repris mot pour mot, seule la ligne de format de réponse change : JSON `{"click": 0|1, "phishing_probability": 0..1}`. Température 0, `max_tokens` 256.
+- Les JSON invalides sont comptés comme erreurs de format, métrique publiée, impossible côté Jev. Les JSON valides mais encadrés de balises de code sont comptés à part.
 - Contrôle de reproduction : rappel et taux de faux positifs comparés à la ligne correspondante de `reference_results.csv`.
 
 ### Métriques (toutes avec intervalle de confiance à 95 %)

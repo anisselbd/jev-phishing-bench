@@ -61,10 +61,12 @@ def load_jev(path: Path) -> dict[str, dict]:
 
 
 def load_llm(path: Path) -> tuple[dict[str, dict], dict]:
-    rows, meta = {}, {"api_errors": 0, "format_errors": 0, "attempted": 0, "model": None}
+    rows, meta = {}, {"api_errors": 0, "format_errors": 0, "fenced": 0, "attempted": 0, "model": None}
     for r in read_jsonl(path):
         meta["attempted"] += 1
         meta["model"] = meta["model"] or r.get("model")
+        if str(r.get("raw", "")).lstrip().startswith("```"):
+            meta["fenced"] += 1  # JSON wrapped in a markdown code fence: parsed, but not "JSON only" as asked
         if not r.get("ok"):
             meta["api_errors"] += 1
             continue
@@ -413,6 +415,7 @@ def write_report(m: dict, out: Path) -> None:
     row("List price in / out per M tokens", f"${JEV_PRICE_IN} / not published", f"${m['llm_cost']['price_in_per_m']} / ${m['llm_cost']['price_out_per_m']}" if llm else "")
     row("Cost per 1 000 emails (list price)", usd(m["jev_cost"]["per_1000_emails_usd"]), usd(m["llm_cost"]["per_1000_emails_usd"]) if llm else "")
     row("Format errors", "0 (typed output)", str(m["llm_errors"]["format_errors"]) if llm else "")
+    row("JSON wrapped in a code fence despite 'JSON only'", "n/a", str(m["llm_errors"].get("fenced", 0)) if llm else "")
     if llm and m.get("ratios"):
         r = m["ratios"]
         L.append("")

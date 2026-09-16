@@ -14,7 +14,8 @@ Both systems see the same 2 000 emails of the PhishNChips v5.2 benchmark, in the
 no concurrency. Jev gets the email as a JSON object and nine typed questions in one request (a verdict Choice, a mirror
 Noul, five signal Nouls, two alternative wordings of the verdict). The LLM gets the same JSON string inside the
 "balanced" system prompt written by the benchmark authors, with only the answer-format sentence changed so it returns
-`{"click": 0|1, "phishing_probability": 0..1}`. We then compare accuracy, recall, false positive rate, AUROC,
+`{"click": 0|1, "phishing_probability": 0..1}`. The baseline model is Claude Haiku 4.5 through the native Messages API,
+no thinking, temperature 0. We then compare accuracy, recall, false positive rate, AUROC,
 calibration (ECE, Brier, reliability diagram), an auto-decision curve, latency, cost at list price, format errors, and
 the stability of probabilities across repeated passes. Every proportion carries a 95% Wilson interval; AUROC, ECE,
 Brier and F1 carry a bootstrap interval; the accuracy gap is tested with an exact McNemar test on paired emails.
@@ -39,7 +40,7 @@ committed.
 Requirements: Python 3.13 and [uv](https://docs.astral.sh/uv/).
 
 ```bash
-cp .env.example .env            # then fill in the keys and the LLM settings (baseline used: gemini-3-flash-preview)
+cp .env.example .env            # then fill in the keys (baseline used: claude-haiku-4-5, Anthropic Messages API)
 uv run prepare_data.py          # download + checksum + data/emails.jsonl
 uv run net_floor.py             # network round-trip floor to each API host
 uv run run_jev.py --limit 10    # smoke test, prints raw answers
@@ -47,7 +48,7 @@ uv run run_jev.py               # pass 1, all 2 000 emails
 uv run run_jev.py --pass 2      # pass 2, stability
 uv run run_jev.py --pass 3 --sample 200   # next day, 200-email subset
 uv run run_llm.py --limit 10
-uv run run_llm.py               # paced by LLM_RPM, resumable across days
+uv run run_llm.py               # sequential, resumable; LLM_RPM paces free tiers
 uv run run_llm.py --pass 2 --sample 300
 uv run analyze.py               # results/metrics.json + results/report.md
 uv run charts.py                # results/chart.png + results/signals.png
@@ -86,8 +87,8 @@ The exact text is in `run_jev.py`. No examples, no hints about the dataset, no s
   tiny request to each host so inference time can be separated from network time.
 - Jev publishes an input price only (42 dollars per billion input tokens). Its output tokens are billed at zero here.
 - Costs use list prices even when a run used a free tier.
-- Gemini 3 models cannot switch reasoning off; the baseline runs at the lowest available reasoning level. Google's
-  OpenAI-compatible endpoint does not report reasoning tokens, so the LLM cost is a lower bound.
+- The baseline is Claude Haiku 4.5 without thinking, the cheap and fast end of its family. A Gemini 3 Flash run on the
+  free tier was attempted first and abandoned: 10 requests per minute plus 503 bursts meant a 14-hour run.
 
 ## Layout
 
