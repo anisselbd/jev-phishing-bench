@@ -235,6 +235,55 @@ def stability(a: dict[str, dict], b: dict[str, dict], key: str = "p", pred_key: 
     }
 
 
+def logistic_fit(X: np.ndarray, y: np.ndarray, iters: int = 200, l2: float = 1e-2) -> np.ndarray:
+    """Plain Newton-Raphson logistic regression with a small ridge penalty. X already has a bias column."""
+    w = np.zeros(X.shape[1])
+    for _ in range(iters):
+        z = X @ w
+        pr = 1 / (1 + np.exp(-z))
+        grad = X.T @ (pr - y) + l2 * w
+        H = (X * (pr * (1 - pr))[:, None]).T @ X + l2 * np.eye(X.shape[1])
+        step = np.linalg.solve(H, grad)
+        w -= step
+        if np.abs(step).max() < 1e-8:
+            break
+    return w
+
+
+def composite_signals(rows: dict[str, dict], rng: np.random.Generator, folds: int = 5) -> dict:
+    """Exploratory: can code combine Jev's atomic signals better than Jev's own verdict?
+
+    Two rules. (a) A single fixed rule decided before looking at the labels: phishing if the free-hosting signal is
+    at least 0.5. (b) A 5-fold cross-validated logistic regression on the five signals plus the verdict probability,
+    so every email is scored by a model that never saw its label.
+    """
+    ids = sorted(i for i in rows if len(rows[i]["signals"]) == len(SIGNALS))
+    y = np.array([rows[i]["y"] for i in ids])
+    S = np.array([[rows[i]["signals"][s] for s in SIGNALS] for i in ids])
+    pv = np.array([rows[i]["p"] for i in ids])
+    out = {"n": len(ids)}
+    rule = (S[:, SIGNALS.index("sig_free_hosting")] >= 0.5).astype(int)
+    out["rule_free_hosting"] = classification(y, rule)
+    X = np.column_stack([np.ones(len(ids)), S, pv])
+    order = rng.permutation(len(ids))
+    cv_p = np.zeros(len(ids))
+    for k in range(folds):
+        test = order[k::folds]
+        train = np.setdiff1d(order, test)
+        w = logistic_fit(X[train], y[train])
+        cv_p[test] = 1 / (1 + np.exp(-(X[test] @ w)))
+    cv_pred = (cv_p >= 0.5).astype(int)
+    d = classification(y, cv_pred)
+    d["auroc"] = auroc(y, cv_p)
+    d["ece"] = ece(y, cv_p, cv_pred)[0]
+    d["brier"] = brier(y, cv_p)
+    d["auto_decision"] = auto_decision(y, cv_p, cv_pred)
+    w_full = logistic_fit(X, y)
+    d["weights_full_fit"] = {name: float(v) for name, v in zip(["bias"] + SIGNALS + ["verdict_p"], w_full)}
+    out["cv_logistic"] = d
+    return out
+
+
 def by_category(rows: dict[str, dict], emails: dict[str, dict]) -> dict:
     out: dict[str, dict] = {}
     for i, r in rows.items():
@@ -444,6 +493,23 @@ def write_report(m: dict, out: Path) -> None:
     for s, d in j["signals"].items():
         L.append(f"| {s} | {d['mean_phishing']:.3f} | {d['mean_legit']:.3f} | {d['auroc']:.3f} |")
 
+    c = m.get("jev_composite")
+    if c:
+        r1, r2 = c["rule_free_hosting"], c["cv_logistic"]
+        L.append("")
+        L.append("## Exploratory: combining Jev's signals in code")
+        L.append("")
+        L.append("Not part of the head-to-head comparison. It asks whether the atomic signals carry more than the verdict, "
+                 "which is the composition pattern TypeSafe's docs recommend.")
+        L.append("")
+        L.append("| Rule | Accuracy | Recall | False positive rate | AUROC | ECE |")
+        L.append("|---|---|---|---|---|---|")
+        L.append(f"| Jev verdict alone | {f(jev['accuracy'])} | {f(jev['recall'])} | {f(jev['fpr'])} | {jev['auroc']:.3f} | {jev['ece']:.3f} |")
+        L.append(f"| free-hosting signal >= 0.5, fixed rule | {f(r1['accuracy'])} {ci(r1['accuracy_ci'])} | {f(r1['recall'])} | {f(r1['fpr'])} | | |")
+        L.append(f"| 5-fold CV logistic on 5 signals + verdict p | {f(r2['accuracy'])} {ci(r2['accuracy_ci'])} | {f(r2['recall'])} | {f(r2['fpr'])} | {r2['auroc']:.3f} | {r2['ece']:.3f} |")
+        L.append("")
+        L.append("Full-fit weights of the logistic model, for reading only: " + ", ".join(f"{k} {v:+.2f}" for k, v in r2["weights_full_fit"].items()) + ".")
+
     # categories
     L.append("")
     L.append("## Accuracy by URL category of the dataset")
@@ -535,6 +601,8 @@ def main() -> None:
         "choice_noul_pearson": float(np.corrcoef(p, np.array([jev1[i]["noul"] for i in ids]))[0, 1]),
         "conf_vs_maxp_pearson": float(np.corrcoef(conf, maxp)[0, 1]) if conf.std() > 0 else float("nan"),
     }
+
+    m["jev_composite"] = composite_signals(jev1, rng)
 
     m["stability"] = {
         "Jev pass 1 vs pass 2 (choice p)": stability(jev1, jev2),
