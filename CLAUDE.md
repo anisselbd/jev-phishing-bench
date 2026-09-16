@@ -68,7 +68,7 @@ Une requête par email, `state` en objet JSON avec les champs natifs du dataset 
 - Gemini 3 Flash via l'offre gratuite Google AI Studio, endpoint compatible OpenAI (`https://generativelanguage.googleapis.com/v1beta/openai/`). Présent dans la grille publiée, sorti avant le dataset, prix catalogue connu. Gemini 2.5 Flash est en tête de la grille mais retiré le 16 octobre 2026.
 - Repli si le quota bloque : Groq avec Llama 4 Scout, lui aussi dans la grille.
 - Client générique compatible OpenAI configuré par `.env` : `LLM_BASE_URL`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_PRICE_IN`, `LLM_PRICE_OUT` (prix catalogue en dollars par million de tokens, toujours renseignés même en offre gratuite).
-- Prompt système "balanced" des auteurs repris mot pour mot, seule la ligne de format de réponse change : JSON `{"click": 0|1, "phishing_probability": 0..1}`. Température 0, thinking désactivé (configuration la plus favorable au LLM sur latence et coût).
+- Prompt système "balanced" des auteurs repris mot pour mot, seule la ligne de format de réponse change : JSON `{"click": 0|1, "phishing_probability": 0..1}`. Température 0. Le thinking ne peut pas être coupé sur les modèles Gemini 3 (doc de la couche compatible OpenAI), il est donc réglé au minimum disponible via `LLM_EXTRA_BODY={"reasoning_effort": "low"}` : configuration la plus favorable au LLM sur latence et coût.
 - Les JSON invalides sont comptés comme erreurs de format, métrique publiée, impossible côté Jev.
 - Contrôle de reproduction : rappel et taux de faux positifs comparés à la ligne correspondante de `reference_results.csv`.
 
