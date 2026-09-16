@@ -1,6 +1,6 @@
 # Brouillon de thread X (@Lbdev__)
 
-Chiffres de results/report.md du 17 septembre 2026. Un tweet par idée. Les chiffres de stabilité Haiku (tweet 8) sont à confirmer après la passe 2.
+Chiffres de results/report.md du 17 septembre 2026. Un tweet par idée.
 
 ---
 
@@ -34,7 +34,7 @@ la calibration, l'angle que personne n'avait audité. jev : ece 0,154. entre 0,8
 
 **8.**
 
-stabilité : j'ai tout repassé une deuxième fois. jev change d'avis sur 2,2 % des emails, écart moyen de proba 0,017, corrélation 0,996. pas déterministe, mais très stable. [haiku : à compléter après la passe 2]
+stabilité : j'ai tout repassé une deuxième fois. jev change d'avis sur 2,2 % des emails, écart moyen de proba 0,017, écart max 0,15. haiku à température 0 : 98 % de probas strictement identiques, 0,7 % de changements d'avis, mais quand il bouge il bouge fort, écart max 0,65. jev n'est pas déterministe, il est juste stable
 
 **9.**
 
@@ -48,5 +48,4 @@ conclusion perso : jev en classifieur "tout-en-un", non. jev en capteur de signa
 
 Notes pour la publication :
 - Remplacer [lien github] par l'URL du repo une fois public.
-- Tweet 8 à compléter avec la ligne "claude-haiku-4-5 pass 1 vs pass 2" du rapport.
 - Ne pas arrondir 62,6 en 63 ni 81,3 en 81 dans les visuels, garder les mêmes chiffres partout.

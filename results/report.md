@@ -1,6 +1,6 @@
 # Jev vs LLM on PhishNChips v5.2
 
-Generated 2026-09-16T22:36:54.864980+00:00. Dataset: 2000 emails (1 000 phishing, 1 000 legitimate). Jev model served behind `jev-latest`: jev-1.13.0. Jev answered 2000 emails, 0 API errors out of 2000 calls.
+Generated 2026-09-16T22:40:28.938380+00:00. Dataset: 2000 emails (1 000 phishing, 1 000 legitimate). Jev model served behind `jev-latest`: jev-1.13.0. Jev answered 2000 emails, 0 API errors out of 2000 calls.
 claude-haiku-4-5 answered 2000 emails with a valid JSON, 0 format errors and 0 API errors out of 2000 calls.
 
 ## Headline comparison
@@ -71,7 +71,7 @@ claude-haiku-4-5: mean p(phishing) 62.6% on phishing, 15.4% on legitimate, 0.1% 
 | Jev pass 1 vs pass 2 (choice p) | 2000 | 0.0171 | 0.0500 | 0.1500 | 5.2% | 25.9% | 2.2% | 0.9963 |
 | Jev pass 1 vs pass 3 (choice p, next day) | 0 | not run | | | | | | |
 | Jev pass 1 vs pass 2 (noul) | 2000 | 0.0106 | 0.0300 | 0.1000 | 1.0% | 35.4% | 2.2% | 0.9970 |
-| claude-haiku-4-5 pass 1 vs pass 2 | 2 | 0.0000 | 0.0000 | 0.0000 | 0.0% | 100.0% | 0.0% | 1.0000 |
+| claude-haiku-4-5 pass 1 vs pass 2 | 300 | 0.0054 | 0.0000 | 0.6500 | 1.7% | 98.0% | 0.7% | 0.9894 |
 
 ## Jev: primitives and wording sensitivity
 

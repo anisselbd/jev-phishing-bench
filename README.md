@@ -17,7 +17,7 @@ faster and cheaper is it than an LLM on the same 2 000 emails?
 | ECE (10 bins) | 0.154 | 0.097 |
 | Latency p50, from France | 239 ms (network floor 163 ms) | 687 ms (network floor 18 ms) |
 | Cost per 1 000 emails, list price | $0.038 | $0.462 |
-| Probability change between two passes | 2.2% label flips, mean abs diff 0.017 | see report |
+| Probability change between two passes | 2.2% label flips, mean abs diff 0.017, max 0.15 | 0.7% label flips on 300 emails, 98% identical, max diff 0.65 |
 
 Jev's own verdict loses clearly on accuracy (McNemar p < 0.0001) and wins on speed and cost. The surprise is in the
 five signal questions asked in the same call: the free-hosting signal alone reaches AUROC 0.96, a fixed rule on it
