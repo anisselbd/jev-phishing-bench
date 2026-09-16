@@ -545,7 +545,7 @@ def write_report(m: dict, out: Path) -> None:
     L.append("- Jev state is the email as a JSON object; the LLM receives the same JSON string inside the authors' balanced prompt.")
     L.append("- Jev verdict is the choice with the highest probability. The LLM verdict is its click decision; its probability is the verbalized phishing_probability.")
     L.append("- Confidence intervals: Wilson for proportions, percentile bootstrap (2 000 resamples) for AUROC, ECE, Brier and F1.")
-    L.append("- Costs use list prices even when the run used a free tier. Jev has no published output price, so its output tokens are billed at zero.")
+    L.append("- Costs use list prices. Jev has no published output price; the TypeSafe dashboard billed our two passes (4 561 792 tokens, 0.90M of them output) 0.15 dollars, which matches input-only billing, so output tokens are counted at zero.")
     out.write_text("\n".join(L) + "\n", encoding="utf-8")
 
 

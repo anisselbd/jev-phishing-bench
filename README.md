@@ -85,7 +85,8 @@ The exact text is in `run_jev.py`. No examples, no hints about the dataset, no s
   Jev's own sensitivity is measured with two alternative wordings, in the same call.
 - Latency is wall-clock from a machine in France to US-hosted services. `net_floor.py` measures the round trip of a
   tiny request to each host so inference time can be separated from network time.
-- Jev publishes an input price only (42 dollars per billion input tokens). Its output tokens are billed at zero here.
+- Jev publishes an input price only (42 dollars per billion input tokens). The TypeSafe dashboard confirmed it: our two
+  passes consumed 4 561 792 tokens (3.66M input, 0.90M output) and were billed 0.15 dollars, which matches input only.
 - Costs use list prices even when a run used a free tier.
 - The baseline is Claude Haiku 4.5 without thinking, the cheap and fast end of its family. A Gemini 3 Flash run on the
   free tier was attempted first and abandoned: 10 requests per minute plus 503 bursts meant a 14-hour run.
