@@ -47,5 +47,4 @@ conclusion perso : jev en classifieur "tout-en-un", non. jev en capteur de signa
 ---
 
 Notes pour la publication :
-- Remplacer https://github.com/anisselbd/jev-phishing-bench par l'URL du repo une fois public.
 - Ne pas arrondir 62,6 en 63 ni 81,3 en 81 dans les visuels, garder les mêmes chiffres partout.
