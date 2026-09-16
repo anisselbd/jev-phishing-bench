@@ -42,10 +42,10 @@ les limites, parce que sinon ça vaut rien : corps d'emails synthétiques (datas
 
 **10.**
 
-conclusion perso : jev en classifieur "tout-en-un", non. jev en capteur de signaux atomiques à 0,04 $ les 1 000 emails, combinés par ton code, oui, et c'est exactement ce que leur doc recommande. repo, rapport, code, tout est là : [lien github]
+conclusion perso : jev en classifieur "tout-en-un", non. jev en capteur de signaux atomiques à 0,04 $ les 1 000 emails, combinés par ton code, oui, et c'est exactement ce que leur doc recommande. repo, rapport, code, tout est là : https://github.com/anisselbd/jev-phishing-bench
 
 ---
 
 Notes pour la publication :
-- Remplacer [lien github] par l'URL du repo une fois public.
+- Remplacer https://github.com/anisselbd/jev-phishing-bench par l'URL du repo une fois public.
 - Ne pas arrondir 62,6 en 63 ni 81,3 en 81 dans les visuels, garder les mêmes chiffres partout.
