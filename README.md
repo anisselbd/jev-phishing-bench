@@ -6,7 +6,24 @@ classic LLM on one security decision: should an email agent click the link in th
 The question this repo answers with numbers: is Jev accurate enough, are its probabilities calibrated, and how much
 faster and cheaper is it than an LLM on the same 2 000 emails?
 
-Results live in `results/report.md`, `results/chart.png` and `results/signals.png` once the runs are done.
+## Results (17 September 2026, 2 000 emails)
+
+| | Jev (jev-1.13.0) | Claude Haiku 4.5 |
+|---|---|---|
+| Accuracy | 62.6% [60.5, 64.7] | 81.3% [79.5, 82.9] |
+| Recall on phishing | 43.2% | 76.4% |
+| False positive rate | 18.0% | 13.8% |
+| AUROC | 0.689 | 0.837 |
+| ECE (10 bins) | 0.154 | 0.097 |
+| Latency p50, from France | 239 ms (network floor 163 ms) | 687 ms (network floor 18 ms) |
+| Cost per 1 000 emails, list price | $0.038 | $0.462 |
+| Probability change between two passes | 2.2% label flips, mean abs diff 0.017 | see report |
+
+Jev's own verdict loses clearly on accuracy (McNemar p < 0.0001) and wins on speed and cost. The surprise is in the
+five signal questions asked in the same call: the free-hosting signal alone reaches AUROC 0.96, a fixed rule on it
+gives 89.5% accuracy with no fitting, and a cross-validated logistic regression on the five signals reaches 95.1%,
+AUROC 0.988, ECE 0.027. Details, intervals, calibration bins, per-category breakdown and the caveats about the
+published grid are in `results/report.md`; the charts are `results/chart.png` and `results/signals.png`.
 
 ## Method in one paragraph
 
