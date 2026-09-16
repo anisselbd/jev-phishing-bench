@@ -189,6 +189,7 @@ def main() -> None:
                         "input_tokens": usage.get("prompt_tokens", 0),
                         "output_tokens": usage.get("completion_tokens", 0),
                     }
+                    record["usage_raw"] = usage  # keeps completion_tokens_details (reasoning tokens) when the provider sends it
                     parsed, fmt_err = parse_answer(text)
                     record["ok"] = True
                     ok += 1
