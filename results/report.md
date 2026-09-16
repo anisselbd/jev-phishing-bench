@@ -1,25 +1,29 @@
 # Jev vs LLM on PhishNChips v5.2
 
-Generated 2026-09-16T22:03:40.492496+00:00. Dataset: 2000 emails (1 000 phishing, 1 000 legitimate). Jev model served behind `jev-latest`: jev-1.13.0. Jev answered 2000 emails, 0 API errors out of 2000 calls.
+Generated 2026-09-16T22:36:54.864980+00:00. Dataset: 2000 emails (1 000 phishing, 1 000 legitimate). Jev model served behind `jev-latest`: jev-1.13.0. Jev answered 2000 emails, 0 API errors out of 2000 calls.
+claude-haiku-4-5 answered 2000 emails with a valid JSON, 0 format errors and 0 API errors out of 2000 calls.
 
 ## Headline comparison
 
-| Metric | Jev (jev-1.13.0) |
-|---|---|
-| Accuracy (95% CI) | 62.6% [60.5%, 64.7%] |
-| Recall on phishing | 43.2% [40.2%, 46.3%] |
-| False positive rate | 18.0% [15.7%, 20.5%] |
-| Precision | 70.6% |
-| F1 | 53.6% [50.5%, 56.6%] |
-| AUROC | 0.689 [0.667, 0.711] |
-| ECE (10 bins, lower is better) | 0.154 [0.137, 0.176] |
-| Brier score (lower is better) | 0.252 |
-| Latency p50 / p95 (from France) | 239 ms / 331 ms |
-| Network floor, warm connection p50 | 163 ms |
-| Input / output tokens per email | 915 / 225 |
-| List price in / out per M tokens | $0.042 / not published |
-| Cost per 1 000 emails (list price) | $0.0384 |
-| Format errors | 0 (typed output) |
+| Metric | Jev (jev-1.13.0) | claude-haiku-4-5 |
+|---|---|---|
+| Accuracy (95% CI) | 62.6% [60.5%, 64.7%] | 81.3% [79.5%, 82.9%] |
+| Recall on phishing | 43.2% [40.2%, 46.3%] | 76.4% [73.7%, 78.9%] |
+| False positive rate | 18.0% [15.7%, 20.5%] | 13.8% [11.8%, 16.1%] |
+| Precision | 70.6% | 84.7% |
+| F1 | 53.6% [50.5%, 56.6%] | 80.3% [78.3%, 82.2%] |
+| AUROC | 0.689 [0.667, 0.711] | 0.837 [0.820, 0.853] |
+| ECE (10 bins, lower is better) | 0.154 [0.137, 0.176] | 0.097 [0.081, 0.115] |
+| Brier score (lower is better) | 0.252 | 0.163 |
+| Latency p50 / p95 (from France) | 239 ms / 331 ms | 687 ms / 980 ms |
+| Network floor, warm connection p50 | 163 ms | 18 ms |
+| Input / output tokens per email | 915 / 225 | 337 / 25 |
+| List price in / out per M tokens | $0.042 / not published | $1.0 / $5.0 |
+| Cost per 1 000 emails (list price) | $0.0384 | $0.4622 |
+| Format errors | 0 (typed output) | 0 |
+| JSON wrapped in a code fence despite 'JSON only' | n/a | 2000 |
+
+Ratios: claude-haiku-4-5 is 2.9x slower at p50 and 12x more expensive per email at list price. McNemar exact test on the 2000 paired emails: p = 0.0000 (Jev alone correct on 85, claude-haiku-4-5 alone correct on 459).
 
 Jev tokens include the nine questions sent with every email (verdict, mirror noul, five signals, two alternative wordings). The LLM prompt carries the same email plus the system prompt. Latency is wall-clock from the benchmark machine in France, sequential calls on a reused connection; the network floor row is the round trip of a tiny request on the same connection.
 
@@ -27,37 +31,38 @@ Jev tokens include the nine questions sent with every email (verdict, mirror nou
 
 Share of emails decided without a human when acting only above a probability threshold, and accuracy on those emails.
 
-| Threshold | Jev coverage | Jev accuracy |
-|---|---|---|
-| 0.50 | 100.0% | 62.6% (748 errors) |
-| 0.55 | 92.3% | 63.5% (673 errors) |
-| 0.60 | 83.9% | 64.5% (595 errors) |
-| 0.65 | 75.0% | 66.9% (496 errors) |
-| 0.70 | 66.2% | 68.6% (416 errors) |
-| 0.75 | 59.1% | 68.9% (368 errors) |
-| 0.80 | 51.6% | 69.2% (318 errors) |
-| 0.85 | 42.3% | 70.1% (253 errors) |
-| 0.90 | 30.8% | 73.9% (161 errors) |
-| 0.95 | 16.4% | 85.4% (48 errors) |
-| 0.98 | 7.0% | 97.8% (3 errors) |
-| 0.99 | 3.8% | 98.7% (1 errors) |
+| Threshold | Jev coverage | Jev accuracy | claude-haiku-4-5 coverage | claude-haiku-4-5 accuracy |
+|---|---|---|---|---|
+| 0.50 | 100.0% | 62.6% (748 errors) | 100.0% | 81.3% (374 errors) |
+| 0.55 | 92.3% | 63.5% (673 errors) | 100.0% | 81.3% (374 errors) |
+| 0.60 | 83.9% | 64.5% (595 errors) | 100.0% | 81.3% (374 errors) |
+| 0.65 | 75.0% | 66.9% (496 errors) | 99.2% | 81.2% (374 errors) |
+| 0.70 | 66.2% | 68.6% (416 errors) | 99.2% | 81.2% (374 errors) |
+| 0.75 | 59.1% | 68.9% (368 errors) | 86.8% | 81.6% (320 errors) |
+| 0.80 | 51.6% | 69.2% (318 errors) | 75.6% | 81.8% (275 errors) |
+| 0.85 | 42.3% | 70.1% (253 errors) | 75.6% | 81.8% (275 errors) |
+| 0.90 | 30.8% | 73.9% (161 errors) | 55.4% | 82.5% (194 errors) |
+| 0.95 | 16.4% | 85.4% (48 errors) | 54.2% | 82.3% (192 errors) |
+| 0.98 | 7.0% | 97.8% (3 errors) | 0.1% | 100.0% (0 errors) |
+| 0.99 | 3.8% | 98.7% (1 errors) | 0.0% | n/a (0 errors) |
 
 ## Calibration bins (predicted class confidence vs accuracy)
 
-| Bin | Jev n | Jev confidence | Jev accuracy |
-|---|---|---|---|
-| 0.50 to 0.55 | 154 | 52.4% | 51.3% |
-| 0.55 to 0.60 | 168 | 56.9% | 53.6% |
-| 0.60 to 0.65 | 179 | 62.1% | 44.7% |
-| 0.65 to 0.70 | 175 | 67.0% | 54.3% |
-| 0.70 to 0.75 | 142 | 71.9% | 66.2% |
-| 0.75 to 0.80 | 150 | 77.1% | 66.7% |
-| 0.80 to 0.85 | 217 | 82.3% | 65.4% |
-| 0.85 to 0.90 | 199 | 87.6% | 58.8% |
-| 0.90 to 0.95 | 287 | 92.1% | 60.6% |
-| 0.95 to 1.00 | 329 | 97.1% | 85.4% |
+| Bin | Jev n | Jev confidence | Jev accuracy | claude-haiku-4-5 n | claude-haiku-4-5 confidence | claude-haiku-4-5 accuracy |
+|---|---|---|---|---|---|---|
+| 0.50 to 0.55 | 154 | 52.4% | 51.3% | 0 | n/a | n/a |
+| 0.55 to 0.60 | 168 | 56.9% | 53.6% | 0 | n/a | n/a |
+| 0.60 to 0.65 | 179 | 62.1% | 44.7% | 15 | 60.0% | 100.0% |
+| 0.65 to 0.70 | 175 | 67.0% | 54.3% | 0 | n/a | n/a |
+| 0.70 to 0.75 | 142 | 71.9% | 66.2% | 249 | 70.5% | 78.3% |
+| 0.75 to 0.80 | 150 | 77.1% | 66.7% | 223 | 75.0% | 79.8% |
+| 0.80 to 0.85 | 217 | 82.3% | 65.4% | 405 | 85.0% | 80.0% |
+| 0.85 to 0.90 | 199 | 87.6% | 58.8% | 0 | n/a | n/a |
+| 0.90 to 0.95 | 287 | 92.1% | 60.6% | 24 | 92.0% | 91.7% |
+| 0.95 to 1.00 | 329 | 97.1% | 85.4% | 1084 | 95.0% | 82.3% |
 
 Probability shape. Jev: mean p(phishing) 45.6% on phishing, 25.9% on legitimate, 12.3% of answers below 0.05 or above 0.95, 101 distinct values.
+claude-haiku-4-5: mean p(phishing) 62.6% on phishing, 15.4% on legitimate, 0.1% extreme, 10 distinct values.
 
 ## Stability of probabilities across passes
 
@@ -66,6 +71,7 @@ Probability shape. Jev: mean p(phishing) 45.6% on phishing, 25.9% on legitimate,
 | Jev pass 1 vs pass 2 (choice p) | 2000 | 0.0171 | 0.0500 | 0.1500 | 5.2% | 25.9% | 2.2% | 0.9963 |
 | Jev pass 1 vs pass 3 (choice p, next day) | 0 | not run | | | | | | |
 | Jev pass 1 vs pass 2 (noul) | 2000 | 0.0106 | 0.0300 | 0.1000 | 1.0% | 35.4% | 2.2% | 0.9970 |
+| claude-haiku-4-5 pass 1 vs pass 2 | 2 | 0.0000 | 0.0000 | 0.0000 | 0.0% | 100.0% | 0.0% | 1.0000 |
 
 ## Jev: primitives and wording sensitivity
 
@@ -102,18 +108,24 @@ Full-fit weights of the logistic model, for reading only: bias -5.04, sig_domain
 
 ## Accuracy by URL category of the dataset
 
-| Category | Class | n | Jev accuracy |
-|---|---|---|---|
-| firebase | phishing | 101 | 45.5% [36.2%, 55.2%] |
-| github_pages | phishing | 227 | 17.2% [12.8%, 22.6%] |
-| google_docs | phishing | 196 | 1.5% [0.5%, 4.4%] |
-| hosting_platform | phishing | 17 | 100.0% [81.6%, 100.0%] |
-| ipfs | phishing | 102 | 60.8% [51.1%, 69.7%] |
-| other_https | phishing | 13 | 53.8% [29.1%, 76.8%] |
-| short_clean_https | phishing | 190 | 83.2% [77.2%, 87.8%] |
-| url_shortener | phishing | 154 | 64.9% [57.1%, 72.0%] |
-| cross_domain_legitimate | legitimate | 333 | 55.0% [49.6%, 60.2%] |
-| legitimate | legitimate | 667 | 95.5% [93.7%, 96.8%] |
+| Category | Class | n | Jev accuracy | claude-haiku-4-5 accuracy |
+|---|---|---|---|---|
+| firebase | phishing | 101 | 45.5% [36.2%, 55.2%] | 100.0% [96.3%, 100.0%] |
+| github_pages | phishing | 227 | 17.2% [12.8%, 22.6%] | 84.6% [79.3%, 88.7%] |
+| google_docs | phishing | 196 | 1.5% [0.5%, 4.4%] | 3.1% [1.4%, 6.5%] |
+| hosting_platform | phishing | 17 | 100.0% [81.6%, 100.0%] | 100.0% [81.6%, 100.0%] |
+| ipfs | phishing | 102 | 60.8% [51.1%, 69.7%] | 100.0% [96.4%, 100.0%] |
+| other_https | phishing | 13 | 53.8% [29.1%, 76.8%] | 100.0% [77.2%, 100.0%] |
+| short_clean_https | phishing | 190 | 83.2% [77.2%, 87.8%] | 94.7% [90.6%, 97.1%] |
+| url_shortener | phishing | 154 | 64.9% [57.1%, 72.0%] | 99.4% [96.4%, 99.9%] |
+| cross_domain_legitimate | legitimate | 333 | 55.0% [49.6%, 60.2%] | 86.8% [82.7%, 90.0%] |
+| legitimate | legitimate | 667 | 95.5% [93.7%, 96.8%] | 85.9% [83.1%, 88.3%] |
+
+## Comparison with the published PhishNChips grid
+
+The dataset's `reference_results.csv` reports, for anthropic/claude-haiku-4.5 with the balanced prompt, recall 95.6% and false positive rate 79.9%. Our run with the same system prompt and a JSON answer format gives recall 76.4% [73.7%, 78.9%] and false positive rate 13.8% [11.8%, 16.1%].
+
+We could not use the published grid as a reproduction check. Joining the raw `benchmark_results.csv` rows to the core email labels by sample id gives every one of the 11 models the same 5.7% recall, which is impossible and points to an id or label mismatch in that file; its `true_label` column mixes `0`, `0.0`, `1` and `1.0` and does not sum to 1 000 per class. For Claude Haiku 4.5 the raw rows contain exactly 1 000 'don't click' answers while the published recall and false positive rate imply about 1 755. Our numbers therefore stand on their own; the published ones are quoted as context only.
 
 ## Method notes
 
@@ -121,4 +133,4 @@ Full-fit weights of the logistic model, for reading only: bias -5.04, sig_domain
 - Jev state is the email as a JSON object; the LLM receives the same JSON string inside the authors' balanced prompt.
 - Jev verdict is the choice with the highest probability. The LLM verdict is its click decision; its probability is the verbalized phishing_probability.
 - Confidence intervals: Wilson for proportions, percentile bootstrap (2 000 resamples) for AUROC, ECE, Brier and F1.
-- Costs use list prices even when the run used a free tier. Jev has no published output price, so its output tokens are billed at zero.
+- Costs use list prices. Jev has no published output price; the TypeSafe dashboard billed our two passes (4 561 792 tokens, 0.90M of them output) 0.15 dollars, which matches input-only billing, so output tokens are counted at zero.
