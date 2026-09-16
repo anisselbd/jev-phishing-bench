@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-16T21:55:04.792101+00:00",
+  "generated_at": "2026-09-16T22:03:40.492496+00:00",
   "n_emails": 2000,
   "seed": 20260916,
   "jev": {
@@ -513,27 +513,27 @@
   },
   "stability": {
     "Jev pass 1 vs pass 2 (choice p)": {
-      "n": 219,
-      "mean_abs_diff": 0.01684931506849315,
-      "p95_abs_diff": 0.050999999999999976,
-      "max_abs_diff": 0.08000000000000002,
-      "frac_diff_over_0_05": 0.0547945205479452,
-      "identical_frac": 0.273972602739726,
-      "label_flip_rate": 0.0319634703196347,
-      "pearson_r": 0.9963208050855896
+      "n": 2000,
+      "mean_abs_diff": 0.01708,
+      "p95_abs_diff": 0.05000000000000002,
+      "max_abs_diff": 0.15000000000000008,
+      "frac_diff_over_0_05": 0.052,
+      "identical_frac": 0.259,
+      "label_flip_rate": 0.022,
+      "pearson_r": 0.9963165243840985
     },
     "Jev pass 1 vs pass 3 (choice p, next day)": {
       "n": 0
     },
     "Jev pass 1 vs pass 2 (noul)": {
-      "n": 219,
-      "mean_abs_diff": 0.00954337899543379,
-      "p95_abs_diff": 0.030000000000000002,
-      "max_abs_diff": 0.040000000000000036,
-      "frac_diff_over_0_05": 0.0,
-      "identical_frac": 0.365296803652968,
-      "label_flip_rate": 0.0319634703196347,
-      "pearson_r": 0.9975022120974938
+      "n": 2000,
+      "mean_abs_diff": 0.010625,
+      "p95_abs_diff": 0.030000000000000027,
+      "max_abs_diff": 0.10000000000000003,
+      "frac_diff_over_0_05": 0.01,
+      "identical_frac": 0.3545,
+      "label_flip_rate": 0.022,
+      "pearson_r": 0.9970004284418379
     }
   },
   "by_category": {
