@@ -563,8 +563,9 @@ def main() -> None:
         raise SystemExit("no successful Jev answers in jev_pass1.jsonl")
     jev2 = load_jev(args.raw_dir / "jev_pass2.jsonl")
     jev3 = load_jev(args.raw_dir / "jev_pass3.jsonl")
-    llm1, llm_meta = load_llm(args.raw_dir / "llm_pass1.jsonl")
-    llm2, _ = load_llm(args.raw_dir / "llm_pass2.jsonl")
+    llm_model = env("LLM_MODEL", "")
+    llm1, llm_meta = load_llm(args.raw_dir / f"llm_{llm_model}_pass1.jsonl") if llm_model else ({}, {})
+    llm2, _ = load_llm(args.raw_dir / f"llm_{llm_model}_pass2.jsonl") if llm_model else ({}, {})
 
     m: dict = {"generated_at": datetime.now(timezone.utc).isoformat(), "n_emails": len(emails), "seed": SEED}
     m["jev"] = evaluate(jev1, args.bootstrap, rng)

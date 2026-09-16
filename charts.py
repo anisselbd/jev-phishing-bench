@@ -95,7 +95,7 @@ def panel_auto_decision(ax, m: dict, llm_name: str) -> None:
 
 def panel_latency(ax, m: dict, llm_name: str, raw_dir: Path) -> None:
     data, labels, colors = [], [], []
-    for key, color, name, fname in (("jev", JEV, "Jev", "jev_pass1.jsonl"), ("llm", LLM, llm_name, "llm_pass1.jsonl")):
+    for key, color, name, fname in (("jev", JEV, "Jev", "jev_pass1.jsonl"), ("llm", LLM, llm_name, f"llm_{m.get('llm_model')}_pass1.jsonl")):
         if key not in m:
             continue
         lat = [r["latency_s"] * 1000 for r in read_jsonl(raw_dir / fname) if r.get("ok")]
