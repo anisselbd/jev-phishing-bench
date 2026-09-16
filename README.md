@@ -39,7 +39,7 @@ committed.
 Requirements: Python 3.13 and [uv](https://docs.astral.sh/uv/).
 
 ```bash
-cp .env.example .env            # then fill in the keys and the LLM settings
+cp .env.example .env            # then fill in the keys and the LLM settings (baseline used: gemini-3-flash-preview)
 uv run prepare_data.py          # download + checksum + data/emails.jsonl
 uv run net_floor.py             # network round-trip floor to each API host
 uv run run_jev.py --limit 10    # smoke test, prints raw answers
@@ -86,7 +86,8 @@ The exact text is in `run_jev.py`. No examples, no hints about the dataset, no s
   tiny request to each host so inference time can be separated from network time.
 - Jev publishes an input price only (42 dollars per billion input tokens). Its output tokens are billed at zero here.
 - Costs use list prices even when a run used a free tier.
-- Gemini 3 models cannot switch reasoning off; the baseline runs at the lowest available reasoning level.
+- Gemini 3 models cannot switch reasoning off; the baseline runs at the lowest available reasoning level. Google's
+  OpenAI-compatible endpoint does not report reasoning tokens, so the LLM cost is a lower bound.
 
 ## Layout
 
