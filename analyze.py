@@ -526,16 +526,22 @@ def write_report(m: dict, out: Path) -> None:
             line += f" {f(ld['accuracy']) + ' ' + ci(ld['accuracy_ci']) if ld else 'n/a'} |"
         L.append(line)
 
-    # reproduction
+    # published grid
     ref = m.get("reference")
     if llm:
         L.append("")
-        L.append("## Reproduction check against the published PhishNChips grid")
+        L.append("## Comparison with the published PhishNChips grid")
         L.append("")
         if ref:
-            L.append(f"Published for {ref['model']} with the balanced prompt: recall {f(ref['recall'])}, false positive rate {f(ref['fpr'])}. "
-                     f"Ours with the same system prompt and a JSON answer format: recall {f(llm['recall'])} {ci(llm['recall_ci'])}, "
-                     f"false positive rate {f(llm['fpr'])} {ci(llm['fpr_ci'])}.")
+            L.append(f"The dataset's `reference_results.csv` reports, for {ref['model']} with the balanced prompt, recall {f(ref['recall'])} and "
+                     f"false positive rate {f(ref['fpr'])}. Our run with the same system prompt and a JSON answer format gives recall "
+                     f"{f(llm['recall'])} {ci(llm['recall_ci'])} and false positive rate {f(llm['fpr'])} {ci(llm['fpr_ci'])}.")
+            L.append("")
+            L.append("We could not use the published grid as a reproduction check. Joining the raw `benchmark_results.csv` rows to the core "
+                     "email labels by sample id gives every one of the 11 models the same 5.7% recall, which is impossible and points to an "
+                     "id or label mismatch in that file; its `true_label` column mixes `0`, `0.0`, `1` and `1.0` and does not sum to 1 000 per "
+                     "class. For Claude Haiku 4.5 the raw rows contain exactly 1 000 'don't click' answers while the published recall and false "
+                     "positive rate imply about 1 755. Our numbers therefore stand on their own; the published ones are quoted as context only.")
         else:
             L.append(f"No row for model {llm_name} with the balanced strategy in reference_results.csv. Set LLM_GRID_MODEL in .env to the grid name if it differs.")
     L.append("")
