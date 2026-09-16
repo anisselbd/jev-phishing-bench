@@ -1,0 +1,23 @@
+# secrets
+.env
+.env.*
+!.env.example
+
+# data downloaded at runtime (never committed)
+data/
+
+# raw run outputs (large, may contain full emails)
+results/*.jsonl
+results/raw/
+
+# python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+
+# os / editors
+.DS_Store
+.idea/
+.vscode/
