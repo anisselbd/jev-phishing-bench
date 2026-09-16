@@ -13,6 +13,7 @@ Usage:
   uv run run_llm.py --limit 10
   uv run run_llm.py
   uv run run_llm.py --pass 2 --sample 300
+  uv run run_llm.py --concurrency 8          # paid tier: fast accuracy run; latency then comes from a sequential subset
   uv run run_llm.py --dry-run --limit 1
 """
 
@@ -22,7 +23,9 @@ import argparse
 import json
 import re
 import sys
+import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 
 import httpx
@@ -126,6 +129,7 @@ def main() -> None:
     parser.add_argument("--sample", type=int)
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--list-models", action="store_true")
+    parser.add_argument("--concurrency", type=int, default=1, help="parallel requests (paid tiers). Keep 1 for latency measurements.")
     args = parser.parse_args()
 
     base_url = env("LLM_BASE_URL", required=True).rstrip("/")
@@ -156,66 +160,88 @@ def main() -> None:
     print(f"model {model} pass {args.pass_no}: {len(todo)} emails to run ({len(already)} already done) -> {out}")
 
     started = time.monotonic()
-    ok = api_errors = format_errors = 0
-    tok_in = tok_out = 0
-    consecutive_failures = 0
-    with httpx.Client(timeout=120) as client:
-        for i, email in enumerate(todo, 1):
-            limiter.wait()
-            body = build_body(email, model, system, user_tpl, extra)
-            resp, latency, attempts, error = post_with_retry(client, url, headers=headers, payload=body)
-            record = {
-                "id": email["id"],
-                "y": email["y"],
-                "pass": args.pass_no,
-                "model": model,
-                "ts": datetime.now(timezone.utc).isoformat(),
-                "latency_s": latency,
-                "attempts": attempts,
-                "ok": False,
-            }
-            if resp is None or error:
-                record["error"] = error or "unknown"
-                api_errors += 1
-                consecutive_failures += 1
-            else:
-                consecutive_failures = 0
-                try:
-                    data = resp.json()
-                    text = data["choices"][0]["message"]["content"]
-                    usage = data.get("usage", {})
-                    record["raw"] = text
-                    record["usage"] = {
-                        "input_tokens": usage.get("prompt_tokens", 0),
-                        "output_tokens": usage.get("completion_tokens", 0),
-                    }
-                    record["usage_raw"] = usage  # keeps completion_tokens_details (reasoning tokens) when the provider sends it
-                    parsed, fmt_err = parse_answer(text)
-                    record["ok"] = True
-                    ok += 1
-                    tok_in += int(record["usage"]["input_tokens"] or 0)
-                    tok_out += int(record["usage"]["output_tokens"] or 0)
-                    if parsed:
-                        record["answer"] = parsed
-                    else:
-                        record["format_error"] = fmt_err
-                        format_errors += 1
-                except (ValueError, KeyError, IndexError, TypeError) as exc:
-                    record["error"] = f"bad response: {exc}: {resp.text[:300]}"
-                    api_errors += 1
-            append_jsonl(out, record)
+    counters = {"ok": 0, "api_errors": 0, "format_errors": 0, "tok_in": 0, "tok_out": 0, "consecutive_failures": 0, "done": 0}
+    lock = threading.Lock()
+    stop = threading.Event()
+    client = httpx.Client(timeout=120)
 
+    def work(email: dict) -> None:
+        if stop.is_set():
+            return
+        with lock:
+            limiter.wait()
+        body = build_body(email, model, system, user_tpl, extra)
+        resp, latency, attempts, error = post_with_retry(client, url, headers=headers, payload=body, log=lambda _m: None)
+        record = {
+            "id": email["id"],
+            "y": email["y"],
+            "pass": args.pass_no,
+            "model": model,
+            "concurrency": args.concurrency,
+            "ts": datetime.now(timezone.utc).isoformat(),
+            "latency_s": latency,
+            "attempts": attempts,
+            "ok": False,
+        }
+        if resp is None or error:
+            record["error"] = error or "unknown"
+        else:
+            try:
+                data = resp.json()
+                text = data["choices"][0]["message"]["content"]
+                usage = data.get("usage", {})
+                record["raw"] = text
+                record["usage"] = {
+                    "input_tokens": usage.get("prompt_tokens", 0),
+                    "output_tokens": usage.get("completion_tokens", 0),
+                }
+                record["usage_raw"] = usage  # keeps completion_tokens_details (reasoning tokens) when the provider sends it
+                parsed, fmt_err = parse_answer(text)
+                record["ok"] = True
+                if parsed:
+                    record["answer"] = parsed
+                else:
+                    record["format_error"] = fmt_err
+            except (ValueError, KeyError, IndexError, TypeError) as exc:
+                record["error"] = f"bad response: {exc}: {resp.text[:300]}"
+        with lock:
+            append_jsonl(out, record)
+            counters["done"] += 1
+            if record["ok"]:
+                counters["ok"] += 1
+                counters["consecutive_failures"] = 0
+                counters["tok_in"] += int(record["usage"]["input_tokens"] or 0)
+                counters["tok_out"] += int(record["usage"]["output_tokens"] or 0)
+                if "format_error" in record:
+                    counters["format_errors"] += 1
+            else:
+                counters["api_errors"] += 1
+                counters["consecutive_failures"] += 1
+            i = counters["done"]
             if args.limit and args.limit <= 20 and record["ok"]:
-                print(f"{email['id']} y={email['y']} -> {record.get('answer') or record.get('format_error')} {latency*1000:.0f} ms usage={record['usage']}")
+                print(f"{email['id']} y={email['y']} -> {record.get('answer') or record.get('format_error')} {latency*1000:.0f} ms usage={record['usage']}", flush=True)
             elif i % 25 == 0 or i == len(todo):
                 elapsed = time.monotonic() - started
-                print(f"  {i}/{len(todo)} ok={ok} api_errors={api_errors} format_errors={format_errors} elapsed={elapsed:.0f}s")
-            if consecutive_failures >= 5:
-                print("5 consecutive failures (quota exhausted?). Stopping, rerun later to resume.")
-                break
+                print(f"  {i}/{len(todo)} ok={counters['ok']} api_errors={counters['api_errors']} format_errors={counters['format_errors']} elapsed={elapsed:.0f}s", flush=True)
+            if not record["ok"]:
+                print(f"  {email['id']}: {record['error'][:160]}", flush=True)
+            if counters["consecutive_failures"] >= 5 and not stop.is_set():
+                print("5 consecutive failures (quota exhausted?). Stopping, rerun later to resume.", flush=True)
+                stop.set()
 
+    if args.concurrency <= 1:
+        for email in todo:
+            if stop.is_set():
+                break
+            work(email)
+    else:
+        with ThreadPoolExecutor(max_workers=args.concurrency) as pool:
+            list(pool.map(work, todo))
+    client.close()
+    ok, api_errors, format_errors = counters["ok"], counters["api_errors"], counters["format_errors"]
+    tok_in, tok_out = counters["tok_in"], counters["tok_out"]
     cost = tok_in / 1e6 * price_in + tok_out / 1e6 * price_out
-    print(f"done: ok={ok} api_errors={api_errors} format_errors={format_errors} tokens in/out={tok_in}/{tok_out} list cost ~${cost:.4f}")
+    print(f"done: ok={ok} api_errors={api_errors} format_errors={format_errors} tokens in/out={tok_in}/{tok_out} list cost ~${cost:.4f}", flush=True)
 
 
 if __name__ == "__main__":
