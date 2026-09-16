@@ -30,6 +30,11 @@ SIGNALS = ["sig_domain_mismatch", "sig_free_hosting", "sig_lure", "sig_urgency",
 # ----------------------------------------------------------------------------- loading
 
 
+def jev_model_name(path: Path) -> str:
+    names = {r.get("model") for r in read_jsonl(path) if r.get("ok") and r.get("model")}
+    return ", ".join(sorted(names)) or "jev-latest"
+
+
 def load_jev(path: Path) -> dict[str, dict]:
     rows = {}
     for r in read_jsonl(path):
@@ -329,14 +334,14 @@ def write_report(m: dict, out: Path) -> None:
     L.append("# Jev vs LLM on PhishNChips v5.2")
     L.append("")
     L.append(f"Generated {m['generated_at']}. Dataset: {m['n_emails']} emails (1 000 phishing, 1 000 legitimate). "
-             f"Jev answered {jev['n']} emails, {m['jev_errors']['api_errors']} API errors out of {m['jev_errors']['attempted']} calls.")
+             f"Jev model served behind `jev-latest`: {m.get('jev_model')}. Jev answered {jev['n']} emails, {m['jev_errors']['api_errors']} API errors out of {m['jev_errors']['attempted']} calls.")
     if llm:
         L.append(f"{llm_name} answered {llm['n']} emails with a valid JSON, {m['llm_errors']['format_errors']} format errors and "
                  f"{m['llm_errors']['api_errors']} API errors out of {m['llm_errors']['attempted']} calls.")
     L.append("")
     L.append("## Headline comparison")
     L.append("")
-    cols = ["Metric", "Jev (jev-latest)"] + ([llm_name] if llm else [])
+    cols = ["Metric", f"Jev ({m.get('jev_model', 'jev-latest')})"] + ([llm_name] if llm else [])
     L.append("| " + " | ".join(cols) + " |")
     L.append("|" + "---|" * len(cols))
 
@@ -497,6 +502,7 @@ def main() -> None:
 
     m: dict = {"generated_at": datetime.now(timezone.utc).isoformat(), "n_emails": len(emails), "seed": SEED}
     m["jev"] = evaluate(jev1, args.bootstrap, rng)
+    m["jev_model"] = jev_model_name(args.raw_dir / "jev_pass1.jsonl")
     attempted, errs = count_errors(args.raw_dir / "jev_pass1.jsonl")
     m["jev_errors"] = {"attempted": attempted, "api_errors": errs}
     m["jev_cost"] = cost(m["jev"]["tokens"], JEV_PRICE_IN, JEV_PRICE_OUT)
