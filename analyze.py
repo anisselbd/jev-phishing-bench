@@ -617,7 +617,10 @@ def write_report(m: dict, out: Path) -> None:
             for s in SIGNALS:
                 L.append(f"| {s} | {run['signal_means'][s]['phishing']:.3f} | {run['signal_means'][s]['legit']:.3f} | {js[s]['mean_phishing']:.3f} | {js[s]['mean_legit']:.3f} |")
         else:
-            L.append("Not run yet: no `llm_<model>_signals_pass1.jsonl` file.")
+            L.append("Not run: the runner `run_llm_signals.py` is ready and smoke-tested, but the Anthropic and Google API keys were "
+                     "deleted by the repository owner after the main runs, so no file `llm_<model>_signals_pass1.jsonl` exists. "
+                     "Anyone with a key can run it (about 30 minutes and 2 dollars for Claude Haiku 4.5) and rerun `analyze.py`; "
+                     "the table above will then fill in and the paired tests will be computed.")
         L.append("")
         L.append("### Control 4: the verdict wordings that were not chosen")
         L.append("")

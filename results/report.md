@@ -1,6 +1,6 @@
 # Jev vs LLM on PhishNChips v5.2
 
-Generated 2026-09-17T08:25:29.768528+00:00. Dataset: 2000 emails (1 000 phishing, 1 000 legitimate). Jev model served behind `jev-latest`: jev-1.13.0. Jev answered 2000 emails, 0 API errors out of 2000 calls.
+Generated 2026-09-17T08:28:22.546808+00:00. Dataset: 2000 emails (1 000 phishing, 1 000 legitimate). Jev model served behind `jev-latest`: jev-1.13.0. Jev answered 2000 emails, 0 API errors out of 2000 calls.
 claude-haiku-4-5 answered 2000 emails with a valid JSON, 0 format errors and 0 API errors out of 2000 calls.
 
 ## Headline comparison
@@ -141,7 +141,7 @@ heuristic logistic weights fitted on A: bias -2.29, hosting_or_shortener +7.16, 
 
 ### Control 3: the same five questions asked to the LLM
 
-Not run yet: no `llm_<model>_signals_pass1.jsonl` file.
+Not run: the runner `run_llm_signals.py` is ready and smoke-tested, but the Anthropic and Google API keys were deleted by the repository owner after the main runs, so no file `llm_<model>_signals_pass1.jsonl` exists. Anyone with a key can run it (about 30 minutes and 2 dollars for Claude Haiku 4.5) and rerun `analyze.py`; the table above will then fill in and the paired tests will be computed.
 
 ### Control 4: the verdict wordings that were not chosen
 

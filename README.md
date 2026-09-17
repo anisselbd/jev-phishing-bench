@@ -41,9 +41,14 @@ emails, and no equivalent decomposition for the LLM. Three controls were added (
   below the regex rule at 91.8% (McNemar p = 0.0032). The logistic regression on Jev's five
   signals reaches 95.0% [93.5%, 96.2%], AUROC 0.982, against 91.8% for the
   regression on the two regex features (p = 0.0018).
-- **Same questions to the LLM.** Claude Haiku 4.5 is asked the five signal questions word for word in one JSON call,
-  then the same rule and regression are applied on the same split. See the report for the outcome once the run is
-  complete.
+- **Same questions to the LLM.** `run_llm_signals.py` asks Claude Haiku 4.5 the five signal questions word for word
+  in one JSON call, then the same rule and regression are applied on the same split. Not run: the API keys were
+  deleted after the main runs. The runner is smoke-tested; with a key the run takes about 30 minutes and 2 dollars,
+  and `analyze.py` fills the table automatically.
+
+Outcome of the controls as they stand: Jev's best single signal does not beat a two-line regex on half B (89.4% vs
+91.8%, McNemar p = 0.003); the regression on Jev's five signals does (95.0% vs 91.8%, p = 0.002). Whether an LLM
+asked the same five questions would match that 95.0% is untested here.
 
 
 ## Method in one paragraph
