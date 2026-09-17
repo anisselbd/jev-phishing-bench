@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-17T09:19:33.135142+00:00",
+  "generated_at": "2026-09-17T09:38:32.549939+00:00",
   "n_emails": 2000,
   "seed": 20260916,
   "jev": {
@@ -522,8 +522,15 @@
       "label_flip_rate": 0.022,
       "pearson_r": 0.9963165243840985
     },
-    "Jev pass 1 vs pass 3 (choice p, next day)": {
-      "n": 0
+    "Jev pass 1 vs pass 3 (choice p, 12 h later)": {
+      "n": 200,
+      "mean_abs_diff": 0.0176,
+      "p95_abs_diff": 0.050000000000000044,
+      "max_abs_diff": 0.07999999999999996,
+      "frac_diff_over_0_05": 0.065,
+      "identical_frac": 0.235,
+      "label_flip_rate": 0.01,
+      "pearson_r": 0.9964854734255344
     },
     "Jev pass 1 vs pass 2 (noul)": {
       "n": 2000,

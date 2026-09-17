@@ -735,9 +735,19 @@ def main() -> None:
 
     m["jev_composite"] = composite_signals(jev1, rng)
 
+    def hours_between(path_a: Path, path_b: Path) -> float | None:
+        ra, rb = read_jsonl(path_a), read_jsonl(path_b)
+        if not ra or not rb:
+            return None
+        ta = datetime.fromisoformat(ra[0]["ts"])
+        tb = datetime.fromisoformat(rb[0]["ts"])
+        return (tb - ta).total_seconds() / 3600
+
+    gap3 = hours_between(args.raw_dir / "jev_pass1.jsonl", args.raw_dir / "jev_pass3.jsonl")
+    label3 = f"Jev pass 1 vs pass 3 (choice p, {gap3:.0f} h later)" if gap3 is not None else "Jev pass 1 vs pass 3 (choice p, later)"
     m["stability"] = {
         "Jev pass 1 vs pass 2 (choice p)": stability(jev1, jev2),
-        "Jev pass 1 vs pass 3 (choice p, next day)": stability(jev1, jev3),
+        label3: stability(jev1, jev3),
         "Jev pass 1 vs pass 2 (noul)": stability(jev1, jev2, key="noul", pred_key="pred"),
     }
     m["by_category"] = {"jev": by_category(jev1, emails)}

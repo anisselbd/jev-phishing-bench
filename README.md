@@ -17,7 +17,7 @@ faster and cheaper is it than an LLM on the same 2 000 emails?
 | ECE (10 bins) | 0.154 | 0.097 |
 | Latency p50, from France | 239 ms (network floor 163 ms) | 687 ms (network floor 18 ms) |
 | Cost per 1 000 emails, list price | $0.038 | $0.462 |
-| Probability change between two passes | 2.2% label flips, mean abs diff 0.017, max 0.15 | 0.7% label flips on 300 emails, 98% identical, max diff 0.65 |
+| Probability change between two passes | 2.2% label flips, mean abs diff 0.017, max 0.15; 1.0% flips on 200 emails 12 h later | 0.7% label flips on 300 emails, 98% identical, max diff 0.65 |
 
 Jev's own verdict loses clearly on accuracy (McNemar p < 0.0001) and wins on speed and cost. The surprise is in the
 five signal questions asked in the same call: the free-hosting signal alone reaches AUROC 0.96, a fixed rule on it
@@ -94,7 +94,7 @@ uv run net_floor.py             # network round-trip floor to each API host
 uv run run_jev.py --limit 10    # smoke test, prints raw answers
 uv run run_jev.py               # pass 1, all 2 000 emails
 uv run run_jev.py --pass 2      # pass 2, stability
-uv run run_jev.py --pass 3 --sample 200   # next day, 200-email subset
+uv run run_jev.py --pass 3 --sample 200   # later, 200-email subset (our run: 12 h after pass 1)
 uv run run_llm.py --limit 10
 uv run run_llm.py               # sequential, resumable; LLM_RPM paces free tiers
 uv run run_llm.py --pass 2 --sample 300
