@@ -42,13 +42,18 @@ emails, and no equivalent decomposition for the LLM. Three controls were added (
   signals reaches 95.0% [93.5%, 96.2%], AUROC 0.982, against 91.8% for the
   regression on the two regex features (p = 0.0018).
 - **Same questions to the LLM.** `run_llm_signals.py` asks Claude Haiku 4.5 the five signal questions word for word
-  in one JSON call, then the same rule and regression are applied on the same split. Not run: the API keys were
-  deleted after the main runs. The runner is smoke-tested; with a key the run takes about 30 minutes and 2 dollars,
-  and `analyze.py` fills the table automatically.
+  in one JSON call per email (2000 calls, 1 API error, 0 format errors, p50 1199 ms,
+  $1.02 per 1 000 emails against $0.04 for Jev), then the same rule and regression are applied on the same split.
+  On B, Haiku's best single signal (`sig_generic_sender` >= 0.08) reaches 94.2% [92.6%, 95.5%],
+  above Jev's single rule (p < 0.0001) and above the regex. Its regression reaches 93.2% [91.5%, 94.6%],
+  AUROC 0.991, against 95.0% and AUROC 0.982 for Jev's: the accuracy gap in Jev's favour is not
+  significant (McNemar p = 0.063) and the AUROC gap goes the other way.
 
-Outcome of the controls as they stand: Jev's best single signal does not beat a two-line regex on half B (89.4% vs
-91.8%, McNemar p = 0.003); the regression on Jev's five signals does (95.0% vs 91.8%, p = 0.002). Whether an LLM
-asked the same five questions would match that 95.0% is untested here.
+Outcome of the controls: Jev's best single signal beats neither the two-line regex (89.4% vs 91.8%, p = 0.003) nor
+Haiku asked the same question (89.4% vs 94.2%, p < 0.0001). The regression on Jev's five signals beats the regex
+(95.0% vs 91.8%, p = 0.002) but is statistically tied with the regression on Haiku's five signals (95.0% vs 93.2%,
+p = 0.063, and Haiku's AUROC is higher). What Jev keeps is the price of the decomposition: about 27 times cheaper and
+5 times faster than Haiku for signals of comparable quality, on a dataset that a regex already separates at 91.8%.
 
 
 ## Method in one paragraph

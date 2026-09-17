@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-17T08:28:22.546808+00:00",
+  "generated_at": "2026-09-17T09:19:33.135142+00:00",
   "n_emails": 2000,
   "seed": 20260916,
   "jev": {
@@ -1036,6 +1036,138 @@
         "accuracy_a": 0.959
       }
     },
+    "llm_signals_split": {
+      "n_a": 999,
+      "n_b": 1000,
+      "features": [
+        "sig_domain_mismatch",
+        "sig_free_hosting",
+        "sig_lure",
+        "sig_urgency",
+        "sig_generic_sender"
+      ],
+      "single_rule": {
+        "n": 1000,
+        "tp": 444,
+        "fp": 2,
+        "fn": 56,
+        "tn": 498,
+        "accuracy": 0.942,
+        "accuracy_ci": [
+          0.9257500917212245,
+          0.9548669299284063
+        ],
+        "recall": 0.888,
+        "recall_ci": [
+          0.8573456933034787,
+          0.9127376027165404
+        ],
+        "fpr": 0.004,
+        "fpr_ci": [
+          0.0010976075412372681,
+          0.014466014041418871
+        ],
+        "precision": 0.9955156950672646,
+        "f1": 0.9386892177589852,
+        "feature": "sig_generic_sender",
+        "threshold": 0.07500000000000001,
+        "auroc_a_all_features": {
+          "sig_domain_mismatch": 0.9232625250501002,
+          "sig_free_hosting": 0.9347074148296594,
+          "sig_lure": 0.8674068136272545,
+          "sig_urgency": 0.8015290581162324,
+          "sig_generic_sender": 0.9556452905811623
+        },
+        "auroc_b": 0.949028,
+        "auroc_b_ci": [
+          0.935323042698931,
+          0.962050735982114
+        ],
+        "accuracy_a": 0.9479479479479479
+      },
+      "logistic": {
+        "n": 1000,
+        "tp": 459,
+        "fp": 27,
+        "fn": 41,
+        "tn": 473,
+        "accuracy": 0.932,
+        "accuracy_ci": [
+          0.9146857880858408,
+          0.946007771535518
+        ],
+        "recall": 0.918,
+        "recall_ci": [
+          0.8906445762331059,
+          0.938981242675059
+        ],
+        "fpr": 0.054,
+        "fpr_ci": [
+          0.03737409848513375,
+          0.07742706124443205
+        ],
+        "precision": 0.9444444444444444,
+        "f1": 0.9310344827586207,
+        "auroc": 0.9911,
+        "auroc_ci": [
+          0.9871188617392622,
+          0.994431454824135
+        ],
+        "ece": 0.030816338819275983,
+        "brier": 0.036643579987527264,
+        "weights": {
+          "bias": -5.3362725361869785,
+          "sig_domain_mismatch": -2.3032392790201563,
+          "sig_free_hosting": 1.1962560285849353,
+          "sig_lure": 6.8522830204159435,
+          "sig_urgency": 3.93737853836159,
+          "sig_generic_sender": 13.152749437056059
+        },
+        "accuracy_a": 0.953953953953954
+      },
+      "run": {
+        "model": "claude-haiku-4-5",
+        "attempted": 2000,
+        "api_errors": 1,
+        "format_errors": 0,
+        "fenced": 1999,
+        "latency": {
+          "n": 1999,
+          "p50_s": 1.1992970420033089,
+          "p95_s": 1.53684995900403,
+          "mean_s": 1.1921805014832483,
+          "min_s": 0.7183601249998901,
+          "max_s": 5.755836874996021
+        },
+        "tokens_per_email": {
+          "input": 616.1985992996498,
+          "output": 80.0
+        },
+        "cost_per_1000_usd": 1.0161985992996498,
+        "signal_means": {
+          "sig_domain_mismatch": {
+            "phishing": 0.8245999999999998,
+            "legit": 0.2132132132132132
+          },
+          "sig_free_hosting": {
+            "phishing": 0.82877,
+            "legit": 0.15335335335335337
+          },
+          "sig_lure": {
+            "phishing": 0.53625,
+            "legit": 0.22771771771771773
+          },
+          "sig_urgency": {
+            "phishing": 0.12595,
+            "legit": 0.051201201201201196
+          },
+          "sig_generic_sender": {
+            "phishing": 0.72001,
+            "legit": 0.0024024024024024023
+          }
+        }
+      }
+    },
     "paired_b": {
       "jev_logistic_vs_heuristic_logistic": {
         "n": 1000,
@@ -1049,9 +1181,24 @@
         "only_second_correct": 43,
         "mcnemar_p": 0.0031560602510210594
       },
-      "jev_logistic_vs_llm_logistic": {},
-      "jev_rule_vs_llm_rule": {},
-      "llm_logistic_vs_heuristic_logistic": {}
+      "jev_logistic_vs_llm_logistic": {
+        "n": 1000,
+        "only_first_correct": 51,
+        "only_second_correct": 33,
+        "mcnemar_p": 0.06297225703616971
+      },
+      "jev_rule_vs_llm_rule": {
+        "n": 1000,
+        "only_first_correct": 34,
+        "only_second_correct": 82,
+        "mcnemar_p": 9.685884063140465e-06
+      },
+      "llm_logistic_vs_heuristic_logistic": {
+        "n": 1000,
+        "only_first_correct": 65,
+        "only_second_correct": 51,
+        "mcnemar_p": 0.2272749463316086
+      }
     }
   },
   "net_floor": {
@@ -1087,13 +1234,13 @@
     "f1": 0.8033648790746583,
     "auroc": 0.836796,
     "auroc_ci": [
-      0.8206968808022749,
-      0.852974308012647
+      0.8202398612361826,
+      0.853160988889119
     ],
     "ece": 0.09714000000000005,
     "ece_ci": [
-      0.08110912499999998,
-      0.11476075
+      0.0808415,
+      0.11546762500000002
     ],
     "ece_bins": [
       {
@@ -1227,12 +1374,12 @@
     ],
     "brier": 0.1630453,
     "brier_ci": [
-      0.15011372874999998,
-      0.17639114124999994
+      0.1510147975,
+      0.17588782624999996
     ],
     "f1_ci": [
-      0.7831897165645919,
-      0.8223718280683584
+      0.7829776894444189,
+      0.822187454426443
     ],
     "auto_decision": [
       {

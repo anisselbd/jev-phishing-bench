@@ -1,6 +1,6 @@
 # Jev vs LLM on PhishNChips v5.2
 
-Generated 2026-09-17T08:28:22.546808+00:00. Dataset: 2000 emails (1 000 phishing, 1 000 legitimate). Jev model served behind `jev-latest`: jev-1.13.0. Jev answered 2000 emails, 0 API errors out of 2000 calls.
+Generated 2026-09-17T09:19:33.135142+00:00. Dataset: 2000 emails (1 000 phishing, 1 000 legitimate). Jev model served behind `jev-latest`: jev-1.13.0. Jev answered 2000 emails, 0 API errors out of 2000 calls.
 claude-haiku-4-5 answered 2000 emails with a valid JSON, 0 format errors and 0 API errors out of 2000 calls.
 
 ## Headline comparison
@@ -12,7 +12,7 @@ claude-haiku-4-5 answered 2000 emails with a valid JSON, 0 format errors and 0 A
 | False positive rate | 18.0% [15.7%, 20.5%] | 13.8% [11.8%, 16.1%] |
 | Precision | 70.6% | 84.7% |
 | F1 | 53.6% [50.5%, 56.6%] | 80.3% [78.3%, 82.2%] |
-| AUROC | 0.689 [0.667, 0.711] | 0.837 [0.821, 0.853] |
+| AUROC | 0.689 [0.667, 0.711] | 0.837 [0.820, 0.853] |
 | ECE (10 bins, lower is better) | 0.154 [0.137, 0.176] | 0.097 [0.081, 0.115] |
 | Brier score (lower is better) | 0.252 | 0.163 |
 | Latency p50 / p95 (from France) | 239 ms / 331 ms | 687 ms / 980 ms |
@@ -130,18 +130,30 @@ Stratified split, seed 20260917: half A has 1000 emails (500 phishing), half B h
 |---|---|---|---|---|---|---|---|---|
 | Jev, five signal nouls | `sig_free_hosting` >= 0.70 | 89.4% [87.3%, 91.2%] | 86.4% / 7.6% | 0.958 [0.948, 0.969] | 95.0% [93.5%, 96.2%] | 97.0% / 7.0% | 0.982 [0.975, 0.989] | 0.024 |
 | heuristic, two regex features | `hosting_or_shortener` >= 0.50 | 91.8% [89.9%, 93.3%] | 83.8% / 0.2% | 0.918 [0.900, 0.934] | 91.8% [89.9%, 93.3%] | 83.8% / 0.2% | 0.937 [0.922, 0.952] | 0.006 |
-| claude-haiku-4-5, same five questions | not run | | | | | | | |
+| claude-haiku-4-5, same five questions | `sig_generic_sender` >= 0.08 | 94.2% [92.6%, 95.5%] | 88.8% / 0.4% | 0.949 [0.935, 0.962] | 93.2% [91.5%, 94.6%] | 91.8% / 5.4% | 0.991 [0.987, 0.994] | 0.031 |
 
 Paired comparisons on half B:
 - Jev single rule vs heuristic single rule: first alone correct on 19, second alone correct on 43, McNemar p = 0.0032 (n = 1000).
 - Jev logistic vs heuristic logistic: first alone correct on 66, second alone correct on 34, McNemar p = 0.0018 (n = 1000).
+- Jev single rule vs claude-haiku-4-5 single rule: first alone correct on 34, second alone correct on 82, McNemar p = 0.0000 (n = 1000).
+- Jev logistic vs claude-haiku-4-5 logistic: first alone correct on 51, second alone correct on 33, McNemar p = 0.0630 (n = 1000).
+- claude-haiku-4-5 logistic vs heuristic logistic: first alone correct on 65, second alone correct on 51, McNemar p = 0.2273 (n = 1000).
 
 Jev logistic weights fitted on A: bias -4.60, sig_domain_mismatch -6.20, sig_free_hosting +10.62, sig_lure +3.96, sig_urgency +1.33, sig_generic_sender +10.73. AUROC of each feature on A: sig_domain_mismatch 0.686, sig_free_hosting 0.960, sig_lure 0.843, sig_urgency 0.390, sig_generic_sender 0.941.
 heuristic logistic weights fitted on A: bias -2.29, hosting_or_shortener +7.16, etld1_mismatch +1.10. AUROC of each feature on A: hosting_or_shortener 0.915, etld1_mismatch 0.799.
+claude-haiku-4-5 logistic weights fitted on A: bias -5.34, sig_domain_mismatch -2.30, sig_free_hosting +1.20, sig_lure +6.85, sig_urgency +3.94, sig_generic_sender +13.15. AUROC of each feature on A: sig_domain_mismatch 0.923, sig_free_hosting 0.935, sig_lure 0.867, sig_urgency 0.802, sig_generic_sender 0.956.
 
 ### Control 3: the same five questions asked to the LLM
 
-Not run: the runner `run_llm_signals.py` is ready and smoke-tested, but the Anthropic and Google API keys were deleted by the repository owner after the main runs, so no file `llm_<model>_signals_pass1.jsonl` exists. Anyone with a key can run it (about 30 minutes and 2 dollars for Claude Haiku 4.5) and rerun `analyze.py`; the table above will then fill in and the paired tests will be computed.
+claude-haiku-4-5 received the five signal questions of `run_jev.py` word for word in one JSON call per email (`run_llm_signals.py`), temperature 0, no thinking. 2000 calls, 1 API errors, 0 format errors, 1999 answers wrapped in a code fence. Latency p50 1199 ms, p95 1537 ms. 616 input and 80 output tokens per email, $1.016 per 1 000 emails at list price. The split results are in the table above.
+
+| Signal | claude-haiku-4-5 mean on phishing | mean on legitimate | Jev mean on phishing | Jev mean on legitimate |
+|---|---|---|---|---|
+| sig_domain_mismatch | 0.825 | 0.213 | 0.752 | 0.375 |
+| sig_free_hosting | 0.829 | 0.153 | 0.868 | 0.174 |
+| sig_lure | 0.536 | 0.228 | 0.610 | 0.252 |
+| sig_urgency | 0.126 | 0.051 | 0.050 | 0.071 |
+| sig_generic_sender | 0.720 | 0.002 | 0.496 | 0.028 |
 
 ### Control 4: the verdict wordings that were not chosen
 

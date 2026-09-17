@@ -26,7 +26,7 @@ le truc vraiment intéressant. dans le même appel j'ai posé 5 questions plus s
 
 **6.**
 
-attention au piège : une simple liste de raccourcisseurs et d'hébergeurs gratuits, sans aucune ia, fait déjà 91,8 % sur ce dataset. le meilleur signal jev seul fait moins bien, 89,4 %. c'est en combinant les 5 signaux par une régression, entraînée sur une moitié et mesurée sur l'autre, qu'on arrive à 95,0 %, auroc 0,98. jev est mauvais pour juger, utile pour observer, mais pas magique
+attention au piège : une simple liste de raccourcisseurs et d'hébergeurs gratuits, sans aucune ia, fait déjà 91,8 % sur ce dataset. le meilleur signal jev seul fait moins bien, 89,4 %. en combinant les 5 signaux par une régression entraînée sur une moitié et mesurée sur l'autre, on arrive à 95,0 %. et haiku, à qui j'ai posé exactement les 5 mêmes questions, fait 93,2 % de la même façon, écart non significatif. jev est mauvais pour juger, correct pour observer, pas magique
 
 **7.**
 
@@ -38,11 +38,11 @@ stabilité : j'ai tout repassé une deuxième fois. jev change d'avis sur 2,2 % 
 
 **9.**
 
-les limites, parce que sinon ça vaut rien : corps d'emails synthétiques (dataset phishnchips, avril 2026, urls réelles), un seul prompt par système, latence mesurée depuis la france vers des serveurs us, haiku sans thinking, et je n'ai pas testé haiku avec les mêmes 5 questions de signaux. le résumé publié du dataset a aussi des chiffres que je n'ai pas réussi à reproduire, tout est dans le rapport
+les limites, parce que sinon ça vaut rien : corps d'emails synthétiques (dataset phishnchips, avril 2026, urls réelles), un seul prompt par système, latence mesurée depuis la france vers des serveurs us, haiku sans thinking. et le résumé publié du dataset a des chiffres que je n'ai pas réussi à reproduire, tout est dans le rapport
 
 **10.**
 
-conclusion perso : jev en classifieur "tout-en-un", non. jev en capteur de signaux atomiques à 0,04 $ les 1 000 emails, combinés par ton code, oui, et c'est exactement ce que leur doc recommande. repo, rapport, code, tout est là : https://github.com/anisselbd/jev-phishing-bench
+conclusion perso : jev en classifieur "tout-en-un", non. jev en capteur de signaux atomiques, oui mais sans miracle : haiku fait des signaux aussi bons, pour 1 $ les 1 000 emails contre 0,04 $ et 5x plus lent. ce que tu achètes avec jev c'est le prix et la vitesse, pas l'intelligence. repo, rapport, code, tout est là : https://github.com/anisselbd/jev-phishing-bench
 
 ---
 
