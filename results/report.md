@@ -1,6 +1,6 @@
 # Jev vs LLM on PhishNChips v5.2
 
-Generated 2026-09-16T22:40:28.938380+00:00. Dataset: 2000 emails (1 000 phishing, 1 000 legitimate). Jev model served behind `jev-latest`: jev-1.13.0. Jev answered 2000 emails, 0 API errors out of 2000 calls.
+Generated 2026-09-17T08:25:29.768528+00:00. Dataset: 2000 emails (1 000 phishing, 1 000 legitimate). Jev model served behind `jev-latest`: jev-1.13.0. Jev answered 2000 emails, 0 API errors out of 2000 calls.
 claude-haiku-4-5 answered 2000 emails with a valid JSON, 0 format errors and 0 API errors out of 2000 calls.
 
 ## Headline comparison
@@ -12,7 +12,7 @@ claude-haiku-4-5 answered 2000 emails with a valid JSON, 0 format errors and 0 A
 | False positive rate | 18.0% [15.7%, 20.5%] | 13.8% [11.8%, 16.1%] |
 | Precision | 70.6% | 84.7% |
 | F1 | 53.6% [50.5%, 56.6%] | 80.3% [78.3%, 82.2%] |
-| AUROC | 0.689 [0.667, 0.711] | 0.837 [0.820, 0.853] |
+| AUROC | 0.689 [0.667, 0.711] | 0.837 [0.821, 0.853] |
 | ECE (10 bins, lower is better) | 0.154 [0.137, 0.176] | 0.097 [0.081, 0.115] |
 | Brier score (lower is better) | 0.252 | 0.163 |
 | Latency p50 / p95 (from France) | 239 ms / 331 ms | 687 ms / 980 ms |
@@ -105,6 +105,51 @@ Not part of the head-to-head comparison. It asks whether the atomic signals carr
 | 5-fold CV logistic on 5 signals + verdict p | 95.1% [94.1%, 96.0%] | 96.1% | 5.9% | 0.988 | 0.027 |
 
 Full-fit weights of the logistic model, for reading only: bias -5.04, sig_domain_mismatch -4.93, sig_free_hosting +9.27, sig_lure +1.00, sig_urgency -0.77, sig_generic_sender +12.24, verdict_p +3.53.
+
+## Controls added after review (17 September 2026)
+
+The section above on combining Jev's signals was flagged as not publishable as is: no non-AI baseline, selection and evaluation on the same emails, and no equivalent decomposition for the LLM. The controls below add those checks. Nothing above was changed.
+
+### Control 1: a baseline with no AI
+
+Two features computed from the email text alone (`bench/heuristics.py`): `hosting_or_shortener`, the link's registered domain or host is in a generic list of URL shorteners, free hosting and static-site platforms, IPFS gateways and document-sharing hosts; `etld1_mismatch`, the registered domain (public suffix list) of the sender differs from the link's. No fitting, no labels. Evaluated on all 2 000 emails.
+
+| Rule | Accuracy (95% CI) | Recall | False positive rate | AUROC |
+|---|---|---|---|---|
+| link on a shortener or free host | 91.6% [90.4%, 92.8%] | 83.5% [81.1%, 85.7%] | 0.2% [0.1%, 0.7%] | 0.916 |
+| sender eTLD+1 differs from link eTLD+1 | 79.2% [77.4%, 81.0%] | 93.1% [91.4%, 94.5%] | 34.6% [31.7%, 37.6%] | 0.792 |
+| either of the two | 79.2% [77.4%, 80.9%] | 93.2% [91.5%, 94.6%] | 34.8% [31.9%, 37.8%] |  |
+| both | 91.7% [90.4%, 92.8%] | 83.4% [81.0%, 85.6%] | 0.0% [0.0%, 0.4%] |  |
+| ordinal score 2 x hosting + mismatch | | | | 0.937 [0.927, 0.948] |
+
+### Control 2: selection on half A, evaluation on half B
+
+Stratified split, seed 20260917: half A has 1000 emails (500 phishing), half B has 1000 (500 phishing). On A only: the single feature with the highest AUROC is chosen, its threshold is the one that maximises accuracy on A, and a logistic regression on all features of the source is fitted (features only, no verdict probability). Every number below is measured on B. The earlier 5-fold cross-validation stays above as a secondary result.
+
+| Source | Single rule chosen on A | Rule accuracy on B (95% CI) | Rule recall / FPR on B | Rule AUROC on B | Logistic accuracy on B (95% CI) | Logistic recall / FPR | Logistic AUROC on B | Logistic ECE |
+|---|---|---|---|---|---|---|---|---|
+| Jev, five signal nouls | `sig_free_hosting` >= 0.70 | 89.4% [87.3%, 91.2%] | 86.4% / 7.6% | 0.958 [0.948, 0.969] | 95.0% [93.5%, 96.2%] | 97.0% / 7.0% | 0.982 [0.975, 0.989] | 0.024 |
+| heuristic, two regex features | `hosting_or_shortener` >= 0.50 | 91.8% [89.9%, 93.3%] | 83.8% / 0.2% | 0.918 [0.900, 0.934] | 91.8% [89.9%, 93.3%] | 83.8% / 0.2% | 0.937 [0.922, 0.952] | 0.006 |
+| claude-haiku-4-5, same five questions | not run | | | | | | | |
+
+Paired comparisons on half B:
+- Jev single rule vs heuristic single rule: first alone correct on 19, second alone correct on 43, McNemar p = 0.0032 (n = 1000).
+- Jev logistic vs heuristic logistic: first alone correct on 66, second alone correct on 34, McNemar p = 0.0018 (n = 1000).
+
+Jev logistic weights fitted on A: bias -4.60, sig_domain_mismatch -6.20, sig_free_hosting +10.62, sig_lure +3.96, sig_urgency +1.33, sig_generic_sender +10.73. AUROC of each feature on A: sig_domain_mismatch 0.686, sig_free_hosting 0.960, sig_lure 0.843, sig_urgency 0.390, sig_generic_sender 0.941.
+heuristic logistic weights fitted on A: bias -2.29, hosting_or_shortener +7.16, etld1_mismatch +1.10. AUROC of each feature on A: hosting_or_shortener 0.915, etld1_mismatch 0.799.
+
+### Control 3: the same five questions asked to the LLM
+
+Not run yet: no `llm_<model>_signals_pass1.jsonl` file.
+
+### Control 4: the verdict wordings that were not chosen
+
+All four verdict formulations were sent in the same call from the start; `verdict` was fixed as the headline before any answer was read. Their full-dataset numbers are in the table 'Jev: primitives and wording sensitivity' above.
+
+### Control 5: what the questions knew about the dataset
+
+The verdict question contains no example and no hint about the dataset. The five signal questions do not either in their text, but they were written after reading the dataset's URL-evasion taxonomy (shorteners, IPFS, Firebase, GitHub Pages, Google Docs), so they target the way this dataset was built. That is why control 1 exists: the same knowledge, expressed as a regex, is the fair floor for the signals.
 
 ## Accuracy by URL category of the dataset
 

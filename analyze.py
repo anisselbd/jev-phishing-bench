@@ -20,6 +20,8 @@ from pathlib import Path
 import numpy as np
 
 from bench.common import DATA_DIR, RAW_DIR, RESULTS_DIR, SEED, env, env_float, load_emails, read_jsonl, wilson
+from bench.heuristics import HEURISTIC_FEATURES, features as heuristic_features
+from bench.protocol import SPLIT_SEED, evaluate_signal_source, stratified_halves
 
 JEV_PRICE_IN = 0.042  # USD per million input tokens, typesafe.ai homepage, 16 Sept 2026
 JEV_PRICE_OUT = 0.0  # no output price published
@@ -87,6 +89,27 @@ def load_llm(path: Path) -> tuple[dict[str, dict], dict]:
             "tok_in": int(r["usage"].get("input_tokens", 0) or 0),
             "tok_out": int(r["usage"].get("output_tokens", 0) or 0),
         }
+    return rows, meta
+
+
+def load_llm_signals(path: Path) -> tuple[dict[str, dict], dict]:
+    """Control 3 run: one JSON call per email with the five signal questions."""
+    rows, meta = {}, {"api_errors": 0, "format_errors": 0, "fenced": 0, "attempted": 0, "model": None, "latency": [], "tok_in": 0, "tok_out": 0}
+    for r in read_jsonl(path):
+        meta["attempted"] += 1
+        meta["model"] = meta["model"] or r.get("model")
+        if str(r.get("raw", "")).lstrip().startswith("```"):
+            meta["fenced"] += 1
+        if not r.get("ok"):
+            meta["api_errors"] += 1
+            continue
+        meta["latency"].append(r["latency_s"])
+        meta["tok_in"] += int(r["usage"].get("input_tokens", 0) or 0)
+        meta["tok_out"] += int(r["usage"].get("output_tokens", 0) or 0)
+        if "signals" not in r:
+            meta["format_errors"] += 1
+            continue
+        rows[r["id"]] = {"y": r["y"], "signals": r["signals"], "latency": r["latency_s"]}
     return rows, meta
 
 
@@ -513,6 +536,101 @@ def write_report(m: dict, out: Path) -> None:
         L.append("")
         L.append("Full-fit weights of the logistic model, for reading only: " + ", ".join(f"{k} {v:+.2f}" for k, v in r2["weights_full_fit"].items()) + ".")
 
+    # controls added after review
+    c = m.get("controls")
+    if c:
+        sp = c["split"]
+        L.append("")
+        L.append("## Controls added after review (17 September 2026)")
+        L.append("")
+        L.append("The section above on combining Jev's signals was flagged as not publishable as is: no non-AI baseline, selection and "
+                 "evaluation on the same emails, and no equivalent decomposition for the LLM. The controls below add those checks. "
+                 "Nothing above was changed.")
+        L.append("")
+        L.append("### Control 1: a baseline with no AI")
+        L.append("")
+        L.append("Two features computed from the email text alone (`bench/heuristics.py`): `hosting_or_shortener`, the link's registered "
+                 "domain or host is in a generic list of URL shorteners, free hosting and static-site platforms, IPFS gateways and "
+                 "document-sharing hosts; `etld1_mismatch`, the registered domain (public suffix list) of the sender differs from the "
+                 "link's. No fitting, no labels. Evaluated on all 2 000 emails.")
+        L.append("")
+        L.append("| Rule | Accuracy (95% CI) | Recall | False positive rate | AUROC |")
+        L.append("|---|---|---|---|---|")
+        h = c["heuristic_all"]
+        for name, label in (("hosting_or_shortener", "link on a shortener or free host"), ("etld1_mismatch", "sender eTLD+1 differs from link eTLD+1"), ("either", "either of the two"), ("both", "both")):
+            d = h[name]
+            au = f"{d['auroc']:.3f}" if "auroc" in d else ""
+            L.append(f"| {label} | {f(d['accuracy'])} {ci(d['accuracy_ci'])} | {f(d['recall'])} {ci(d['recall_ci'])} | {f(d['fpr'])} {ci(d['fpr_ci'])} | {au} |")
+        L.append(f"| ordinal score 2 x hosting + mismatch | | | | {h['ordinal_score_auroc']:.3f} [{h['ordinal_score_auroc_ci'][0]:.3f}, {h['ordinal_score_auroc_ci'][1]:.3f}] |")
+        L.append("")
+        L.append("### Control 2: selection on half A, evaluation on half B")
+        L.append("")
+        L.append(f"Stratified split, seed {sp['seed']}: half A has {sp['n_a']} emails ({sp['phishing_a']} phishing), half B has {sp['n_b']} "
+                 f"({sp['phishing_b']} phishing). On A only: the single feature with the highest AUROC is chosen, its threshold is the one "
+                 "that maximises accuracy on A, and a logistic regression on all features of the source is fitted (features only, no "
+                 "verdict probability). Every number below is measured on B. The earlier 5-fold cross-validation stays above as a "
+                 "secondary result.")
+        L.append("")
+        L.append("| Source | Single rule chosen on A | Rule accuracy on B (95% CI) | Rule recall / FPR on B | Rule AUROC on B | Logistic accuracy on B (95% CI) | Logistic recall / FPR | Logistic AUROC on B | Logistic ECE |")
+        L.append("|---|---|---|---|---|---|---|---|---|")
+        for key, label in (("jev_signals_split", "Jev, five signal nouls"), ("heuristic_split", "heuristic, two regex features"), ("llm_signals_split", f"{llm_name}, same five questions")):
+            r = c.get(key)
+            if not r:
+                L.append(f"| {label} | not run | | | | | | | |")
+                continue
+            s1, lg = r["single_rule"], r["logistic"]
+            L.append(f"| {label} | `{s1['feature']}` >= {s1['threshold']:.2f} | {f(s1['accuracy'])} {ci(s1['accuracy_ci'])} | {f(s1['recall'])} / {f(s1['fpr'])} | "
+                     f"{s1['auroc_b']:.3f} [{s1['auroc_b_ci'][0]:.3f}, {s1['auroc_b_ci'][1]:.3f}] | {f(lg['accuracy'])} {ci(lg['accuracy_ci'])} | {f(lg['recall'])} / {f(lg['fpr'])} | "
+                     f"{lg['auroc']:.3f} [{lg['auroc_ci'][0]:.3f}, {lg['auroc_ci'][1]:.3f}] | {lg['ece']:.3f} |")
+        L.append("")
+        pb = c.get("paired_b", {})
+        def pair_line(name, label):
+            d = pb.get(name)
+            if d:
+                L.append(f"- {label}: first alone correct on {d['only_first_correct']}, second alone correct on {d['only_second_correct']}, McNemar p = {d['mcnemar_p']:.4f} (n = {d['n']}).")
+        L.append("Paired comparisons on half B:")
+        pair_line("jev_rule_vs_heuristic_rule", "Jev single rule vs heuristic single rule")
+        pair_line("jev_logistic_vs_heuristic_logistic", "Jev logistic vs heuristic logistic")
+        pair_line("jev_rule_vs_llm_rule", f"Jev single rule vs {llm_name} single rule")
+        pair_line("jev_logistic_vs_llm_logistic", f"Jev logistic vs {llm_name} logistic")
+        pair_line("llm_logistic_vs_heuristic_logistic", f"{llm_name} logistic vs heuristic logistic")
+        L.append("")
+        for key, label in (("jev_signals_split", "Jev"), ("heuristic_split", "heuristic"), ("llm_signals_split", llm_name)):
+            r = c.get(key)
+            if r:
+                L.append(f"{label} logistic weights fitted on A: " + ", ".join(f"{k} {v:+.2f}" for k, v in r["logistic"]["weights"].items()) + f". AUROC of each feature on A: " + ", ".join(f"{k} {v:.3f}" for k, v in r["single_rule"]["auroc_a_all_features"].items()) + ".")
+        L.append("")
+        L.append("### Control 3: the same five questions asked to the LLM")
+        L.append("")
+        r = c.get("llm_signals_split")
+        if r and r.get("run"):
+            run = r["run"]
+            L.append(f"{run['model']} received the five signal questions of `run_jev.py` word for word in one JSON call per email "
+                     f"(`run_llm_signals.py`), temperature 0, no thinking. {run['attempted']} calls, {run['api_errors']} API errors, "
+                     f"{run['format_errors']} format errors, {run['fenced']} answers wrapped in a code fence. Latency p50 {ms(run['latency'].get('p50_s'))}, "
+                     f"p95 {ms(run['latency'].get('p95_s'))}. {run['tokens_per_email']['input']:.0f} input and {run['tokens_per_email']['output']:.0f} output tokens per email, "
+                     f"{usd(run['cost_per_1000_usd'], 3)} per 1 000 emails at list price. The split results are in the table above.")
+            L.append("")
+            L.append("| Signal | " + f"{run['model']} mean on phishing | mean on legitimate | Jev mean on phishing | Jev mean on legitimate |")
+            L.append("|---|---|---|---|---|")
+            js = m["jev_internals"]["signals"]
+            for s in SIGNALS:
+                L.append(f"| {s} | {run['signal_means'][s]['phishing']:.3f} | {run['signal_means'][s]['legit']:.3f} | {js[s]['mean_phishing']:.3f} | {js[s]['mean_legit']:.3f} |")
+        else:
+            L.append("Not run yet: no `llm_<model>_signals_pass1.jsonl` file.")
+        L.append("")
+        L.append("### Control 4: the verdict wordings that were not chosen")
+        L.append("")
+        L.append("All four verdict formulations were sent in the same call from the start; `verdict` was fixed as the headline before any "
+                 "answer was read. Their full-dataset numbers are in the table 'Jev: primitives and wording sensitivity' above.")
+        L.append("")
+        L.append("### Control 5: what the questions knew about the dataset")
+        L.append("")
+        L.append("The verdict question contains no example and no hint about the dataset. The five signal questions do not either in their "
+                 "text, but they were written after reading the dataset's URL-evasion taxonomy (shorteners, IPFS, Firebase, GitHub Pages, "
+                 "Google Docs), so they target the way this dataset was built. That is why control 1 exists: the same knowledge, "
+                 "expressed as a regex, is the fair floor for the signals.")
+
     # categories
     L.append("")
     L.append("## Accuracy by URL category of the dataset")
@@ -620,6 +738,76 @@ def main() -> None:
         "Jev pass 1 vs pass 2 (noul)": stability(jev1, jev2, key="noul", pred_key="pred"),
     }
     m["by_category"] = {"jev": by_category(jev1, emails)}
+
+    # ---------------------------------------------------------------- controls added after review
+    fns = {"auroc": auroc, "bootstrap_ci": bootstrap_ci, "brier": brier, "classification": classification, "ece": ece, "logistic_fit": logistic_fit}
+    ids_all = sorted(emails)
+    y_all = {i: emails[i]["y"] for i in ids_all}
+    split_a, split_b = stratified_halves(ids_all, y_all)
+    controls: dict = {
+        "split": {"seed": SPLIT_SEED, "n_a": len(split_a), "n_b": len(split_b),
+                  "phishing_a": sum(y_all[i] for i in split_a), "phishing_b": sum(y_all[i] for i in split_b)}
+    }
+    # control 1: heuristic baseline, no AI, evaluated on all 2 000 (no fitting involved) and on the split
+    heur = {i: [heuristic_features(emails[i]["email"])[n] for n in HEURISTIC_FEATURES] for i in ids_all}
+    yv = np.array([y_all[i] for i in ids_all])
+    H = np.array([heur[i] for i in ids_all])
+    heur_all = {}
+    for k, name in enumerate(HEURISTIC_FEATURES):
+        d = classification(yv, (H[:, k] >= 0.5).astype(int))
+        d["auroc"] = auroc(yv, H[:, k])
+        heur_all[name] = d
+    either = ((H[:, 0] >= 0.5) | (H[:, 1] >= 0.5)).astype(int)
+    heur_all["either"] = classification(yv, either)
+    both = ((H[:, 0] >= 0.5) & (H[:, 1] >= 0.5)).astype(int)
+    heur_all["both"] = classification(yv, both)
+    score = 2 * H[:, 0] + H[:, 1]
+    heur_all["ordinal_score_auroc"] = auroc(yv, score)
+    heur_all["ordinal_score_auroc_ci"] = bootstrap_ci(lambda yy, pp, pr: auroc(yy, pp), yv, score, either, args.bootstrap, rng)
+    controls["heuristic_all"] = heur_all
+    controls["heuristic_split"] = evaluate_signal_source(heur, HEURISTIC_FEATURES, y_all, split_a, split_b, args.bootstrap, rng, fns)
+    # control 2: Jev signals under the split protocol (signals only, no verdict probability)
+    jev_feats = {i: [jev1[i]["signals"][s] for s in SIGNALS] for i in jev1 if len(jev1[i]["signals"]) == len(SIGNALS)}
+    controls["jev_signals_split"] = evaluate_signal_source(jev_feats, SIGNALS, y_all, split_a, split_b, args.bootstrap, rng, fns)
+    # control 3: the LLM asked the same five questions, same protocol
+    llm_sig_path = args.raw_dir / f"llm_{llm_model}_signals_pass1.jsonl" if llm_model else None
+    if llm_sig_path and llm_sig_path.exists():
+        sig_rows, sig_meta = load_llm_signals(llm_sig_path)
+        llm_feats = {i: [sig_rows[i]["signals"][s] for s in SIGNALS] for i in sig_rows}
+        res = evaluate_signal_source(llm_feats, SIGNALS, y_all, split_a, split_b, args.bootstrap, rng, fns)
+        price_in, price_out = env_float("LLM_PRICE_IN", 0.0), env_float("LLM_PRICE_OUT", 0.0)
+        calls = max(1, len(sig_meta["latency"]))
+        res["run"] = {
+            "model": sig_meta["model"], "attempted": sig_meta["attempted"], "api_errors": sig_meta["api_errors"],
+            "format_errors": sig_meta["format_errors"], "fenced": sig_meta["fenced"],
+            "latency": latency_stats(sig_meta["latency"]),
+            "tokens_per_email": {"input": sig_meta["tok_in"] / calls, "output": sig_meta["tok_out"] / calls},
+            "cost_per_1000_usd": (sig_meta["tok_in"] * price_in + sig_meta["tok_out"] * price_out) / 1e6 / calls * 1000,
+            "signal_means": {s: {"phishing": float(np.mean([r["signals"][s] for r in sig_rows.values() if r["y"] == 1])),
+                                 "legit": float(np.mean([r["signals"][s] for r in sig_rows.values() if r["y"] == 0]))} for s in SIGNALS},
+        }
+        controls["llm_signals_split"] = res
+    # paired tests on half B between sources (logistic and single rule)
+    def paired(a_key: str, b_key: str, field: str) -> dict:
+        A, B = controls.get(a_key), controls.get(b_key)
+        if not A or not B:
+            return {}
+        ids = [i for i in A[field] if i in B[field]]
+        only_a = sum(1 for i in ids if A[field][i] and not B[field][i])
+        only_b = sum(1 for i in ids if B[field][i] and not A[field][i])
+        return {"n": len(ids), "only_first_correct": only_a, "only_second_correct": only_b, "mcnemar_p": mcnemar_exact(only_a, only_b)}
+    controls["paired_b"] = {
+        "jev_logistic_vs_heuristic_logistic": paired("jev_signals_split", "heuristic_split", "correct_b"),
+        "jev_rule_vs_heuristic_rule": paired("jev_signals_split", "heuristic_split", "single_correct_b"),
+        "jev_logistic_vs_llm_logistic": paired("jev_signals_split", "llm_signals_split", "correct_b"),
+        "jev_rule_vs_llm_rule": paired("jev_signals_split", "llm_signals_split", "single_correct_b"),
+        "llm_logistic_vs_heuristic_logistic": paired("llm_signals_split", "heuristic_split", "correct_b"),
+    }
+    for key in ("jev_signals_split", "heuristic_split", "llm_signals_split"):
+        if key in controls:
+            controls[key].pop("correct_b", None)
+            controls[key].pop("single_correct_b", None)
+    m["controls"] = controls
 
     nf_path = args.out_dir / "net_floor.json"
     if nf_path.exists():
