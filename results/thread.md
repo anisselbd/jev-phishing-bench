@@ -26,7 +26,7 @@ le truc vraiment intéressant. dans le même appel j'ai posé 5 questions plus s
 
 **6.**
 
-une règle bête sans aucun apprentissage, "hébergement gratuit ≥ 0,5 donc phishing", fait 89,5 %. une régression logistique sur les 5 signaux en validation croisée fait 95,1 %, auroc 0,988, ece 0,027. jev est mauvais pour juger, très bon pour observer. c'est le code qui doit juger
+attention au piège : une simple liste de raccourcisseurs et d'hébergeurs gratuits, sans aucune ia, fait déjà 91,8 % sur ce dataset. le meilleur signal jev seul fait moins bien, 89,4 %. c'est en combinant les 5 signaux par une régression, entraînée sur une moitié et mesurée sur l'autre, qu'on arrive à 95,0 %, auroc 0,98. jev est mauvais pour juger, utile pour observer, mais pas magique
 
 **7.**
 
@@ -38,7 +38,7 @@ stabilité : j'ai tout repassé une deuxième fois. jev change d'avis sur 2,2 % 
 
 **9.**
 
-les limites, parce que sinon ça vaut rien : corps d'emails synthétiques (dataset phishnchips, avril 2026, urls réelles), un seul prompt par système, latence mesurée depuis la france vers des serveurs us, haiku sans thinking. et le résumé publié du dataset a des chiffres que je n'ai pas réussi à reproduire, c'est dans le rapport
+les limites, parce que sinon ça vaut rien : corps d'emails synthétiques (dataset phishnchips, avril 2026, urls réelles), un seul prompt par système, latence mesurée depuis la france vers des serveurs us, haiku sans thinking, et je n'ai pas testé haiku avec les mêmes 5 questions de signaux. le résumé publié du dataset a aussi des chiffres que je n'ai pas réussi à reproduire, tout est dans le rapport
 
 **10.**
 
