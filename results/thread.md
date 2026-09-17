@@ -34,7 +34,7 @@ la calibration, l'angle que personne n'avait audité. jev : ece 0,154. entre 0,8
 
 **8.**
 
-stabilité : j'ai tout repassé une deuxième fois. jev change d'avis sur 2,2 % des emails, écart moyen de proba 0,017, écart max 0,15. haiku à température 0 : 98 % de probas strictement identiques, 0,7 % de changements d'avis, mais quand il bouge il bouge fort, écart max 0,65. jev n'est pas déterministe, il est juste stable
+stabilité : j'ai tout repassé une deuxième fois. jev change d'avis sur 2,2 % des emails, écart moyen de proba 0,017, écart max 0,15. haiku à température 0 : 98 % de probas strictement identiques, 0,7 % de changements d'avis, mais quand il bouge il bouge fort, écart max 0,65. et 12 h plus tard sur 200 emails, même chose. jev n'est pas déterministe, il est juste stable
 
 **9.**
 
