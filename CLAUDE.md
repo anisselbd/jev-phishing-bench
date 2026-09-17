@@ -61,7 +61,7 @@ Content-Type: application/json
 Une requête par email, `state` en objet JSON avec les champs natifs du dataset (`sender`, `from`, `subject`, `body`, `link_display_text`, `link_url`). Questions dans le même appel :
 - `verdict` : choice `phishing` / `legitimate`, instructions calquées sur le prompt "balanced" des auteurs. Sert à l'accuracy, l'ECE, l'AUROC et la courbe d'auto-décision.
 - `is_phishing` : noul miroir de la même question, pour comparer la calibration des deux primitives.
-- 5 signaux noul : domaine de l'expéditeur différent du domaine du lien, lien vers un hébergement gratuit ou un raccourcisseur, demande de connexion ou d'ouverture de document, urgence ou pression, expéditeur webmail générique se présentant au nom d'une organisation.
+- 5 signaux noul : domaine de l'expéditeur différent du domaine du lien, lien vers un hébergement gratuit ou un raccourcisseur, demande de connexion ou d'ouverture de document, urgence ou pression, expéditeur webmail générique se présentant au nom d'une organisation. Honnêteté sur le design : ces cinq questions ont été écrites après lecture de la taxonomie d'évasion d'URL du dataset, elles visent donc sa construction. Le verdict, lui, ne contient aucun indice. D'où la baseline regex de `bench/heuristics.py`, plancher équitable pour tout résultat sur les signaux.
 - Extension gratuite : deux formulations alternatives de la question verdict dans le même appel pour mesurer la sensibilité de Jev à la formulation.
 
 ### Baseline LLM

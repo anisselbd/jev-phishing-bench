@@ -108,6 +108,13 @@ the others are reported so that nobody can suspect a wording picked after the fa
 Pearson r between the choice probability and the mirror noul: 0.959. None of the alternatives changes
 the conclusion: the best wording gains 0.6 points of accuracy, the worst loses 4.
 
+### What the questions knew about the dataset
+
+The verdict question contains no example and no hint about the dataset. The five signal questions do not name the
+dataset either, but they were written after reading its URL-evasion taxonomy (shorteners, IPFS gateways, Firebase,
+GitHub Pages, Google Docs), so they target the way this dataset was built. The same knowledge written as two regex
+features is the non-AI baseline in `bench/heuristics.py`; that is the fair floor for any signal result.
+
 ## Limits, stated up front
 
 - The email bodies are synthetic. The phishing signal lives mostly in the URL, the sender and their consistency, which
