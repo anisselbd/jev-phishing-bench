@@ -91,7 +91,22 @@ One request per email, `state` = the email object, questions:
 | `verdict_alt_click` | choice | "Should the user click the link?" |
 | `verdict_alt_minimal` | choice | "Classify this email." with bare option names |
 
-The exact text is in `run_jev.py`. No examples, no hints about the dataset, no signal names in the verdict question.
+The exact text is in `run_jev.py`.
+
+### Every verdict wording, not just the chosen one
+
+All four verdict formulations travel in the same call. `verdict` was fixed as the headline before any answer was read;
+the others are reported so that nobody can suspect a wording picked after the fact. Numbers on all 2 000 emails:
+
+| Question | Accuracy | AUROC | ECE | Agreement with `verdict` |
+|---|---|---|---|---|
+| verdict (choice) | 62.6% | 0.689 | 0.154 | 100.0% |
+| is_phishing (noul) | 60.6% | 0.684 | 0.172 | 83.2% |
+| verdict_alt_click | 63.2% | 0.700 | 0.115 | 80.1% |
+| verdict_alt_minimal | 58.4% | 0.635 | 0.241 | 79.2% |
+
+Pearson r between the choice probability and the mirror noul: 0.959. None of the alternatives changes
+the conclusion: the best wording gains 0.6 points of accuracy, the worst loses 4.
 
 ## Limits, stated up front
 
