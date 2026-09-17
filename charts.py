@@ -197,6 +197,45 @@ def draw_signals(m: dict, out_dir: Path) -> None:
     plt.close(fig)
 
 
+def draw_controls(m: dict, out_dir: Path) -> None:
+    """results/controls.png: half-B accuracy of the single rule and of the logistic regression, per signal source."""
+    c = m.get("controls")
+    if not c:
+        return
+    llm_name = m.get("llm_model") or "LLM"
+    sources = [("jev_signals_split", "Jev, 5 signal nouls", JEV), ("heuristic_split", "regex, 2 features", TEXT_2), ("llm_signals_split", f"{llm_name}, same 5 questions", LLM)]
+    sources = [s for s in sources if s[0] in c]
+    fig, axes = plt.subplots(1, 2, figsize=(13, 5.6))
+    for ax in axes:
+        ax.set_axisbelow(True)
+    for ax, kind, title in ((axes[0], "single_rule", "Single rule chosen on half A"), (axes[1], "logistic", "Logistic regression fitted on half A")):
+        labels, vals, los, his, colors, aurocs = [], [], [], [], [], []
+        for key, label, color in sources:
+            d = c[key][kind]
+            labels.append(label)
+            vals.append(100 * d["accuracy"])
+            los.append(100 * (d["accuracy"] - d["accuracy_ci"][0]))
+            his.append(100 * (d["accuracy_ci"][1] - d["accuracy"]))
+            colors.append(color)
+            aurocs.append(d["auroc_b"] if kind == "single_rule" else d["auroc"])
+        x = np.arange(len(labels))
+        bars = ax.bar(x, vals, color=colors, width=0.6, yerr=[los, his], capsize=4, ecolor=TEXT)
+        for bar, v, au in zip(bars, vals, aurocs):
+            ax.annotate(f"{v:.1f}%\nAUROC {au:.3f}", (bar.get_x() + bar.get_width() / 2, bar.get_height()), ha="center", va="bottom",
+                        xytext=(0, 8), textcoords="offset points", fontsize=9, color=TEXT)
+        ax.set_xticks(x, labels, fontsize=9)
+        ax.set_ylim(50, 104)
+        ax.set_ylabel("accuracy on half B (%), 95% Wilson interval")
+        ax.set_title(title)
+        ax.grid(True, axis="y")
+        ax.grid(False, axis="x")
+    fig.suptitle("Decomposition control: same split, same rule, same regression for every signal source (n = 1 000 on half B)", fontsize=12, fontweight="bold")
+    fig.text(0.5, 0.01, "selection on half A only, numbers from half B  |  @Lbdev__", ha="center", color=TEXT_2, fontsize=9)
+    fig.tight_layout(rect=(0, 0.03, 1, 0.94))
+    fig.savefig(out_dir / "controls.png", dpi=170)
+    plt.close(fig)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out-dir", type=Path, default=RESULTS_DIR)
@@ -206,7 +245,8 @@ def main() -> None:
     style()
     draw_chart(m, args.out_dir, args.raw_dir)
     draw_signals(m, args.out_dir)
-    print(f"wrote {args.out_dir / 'chart.png'} and {args.out_dir / 'signals.png'}")
+    draw_controls(m, args.out_dir)
+    print(f"wrote {args.out_dir / 'chart.png'}, {args.out_dir / 'signals.png'} and {args.out_dir / 'controls.png'}")
 
 
 if __name__ == "__main__":

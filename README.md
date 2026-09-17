@@ -25,6 +25,27 @@ gives 89.5% accuracy with no fitting, and a cross-validated logistic regression 
 AUROC 0.988, ECE 0.027. Details, intervals, calibration bins, per-category breakdown and the caveats about the
 published grid are in `results/report.md`; the charts are `results/chart.png` and `results/signals.png`.
 
+### Controls added after review (17 September 2026)
+
+The signal result above was challenged on three points: no non-AI baseline, selection and evaluation on the same
+emails, and no equivalent decomposition for the LLM. Three controls were added (`bench/heuristics.py`,
+`bench/protocol.py`, `run_llm_signals.py`); nothing above was changed. Full tables in `results/report.md`, chart in
+`results/controls.png`.
+
+- **Non-AI baseline.** A generic list of shorteners, free hosts, IPFS gateways and document-sharing hosts on the
+  link, plus an eTLD+1 comparison between sender and link. The list rule alone: 91.6% accuracy,
+  83.5% recall, 0.2% false positives on all 2 000 emails. The dataset largely separates by
+  construction.
+- **Split.** 1 000 emails (half A) choose the signal, its threshold and the regression weights; the other 1 000
+  (half B) give the numbers. On B, Jev's best single signal (`sig_free_hosting` >= 0.70) reaches 89.4%,
+  below the regex rule at 91.8% (McNemar p = 0.0032). The logistic regression on Jev's five
+  signals reaches 95.0% [93.5%, 96.2%], AUROC 0.982, against 91.8% for the
+  regression on the two regex features (p = 0.0018).
+- **Same questions to the LLM.** Claude Haiku 4.5 is asked the five signal questions word for word in one JSON call,
+  then the same rule and regression are applied on the same split. See the report for the outcome once the run is
+  complete.
+
+
 ## Method in one paragraph
 
 Both systems see the same 2 000 emails of the PhishNChips v5.2 benchmark, in the same seeded order, one call per email,
