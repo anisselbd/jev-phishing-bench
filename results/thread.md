@@ -1,50 +1,51 @@
-# Brouillon de thread X (@Lbdev__)
+# Brouillon de thread X (@Lbdev__), version technique
 
-Chiffres de results/report.md du 17 septembre 2026. Un tweet par idée.
+Chiffres de results/report.md du 17 septembre 2026. Un tweet par idée. Voix calquée sur les tweets du compte (majuscules normales, "ne" supprimé, lecteur tutoyé ou vouvoyé, phrases courtes, MAJUSCULES pour appuyer).
 
 ---
 
 **1.** (avec results/chart.png)
 
-j'ai benchmarké jev, le "modèle de décision" de typesafe sorti il y a 2 jours, contre claude haiku 4.5 sur 2 000 emails de phishing. même emails, même consigne, un appel par email. repo public et méthode complète en fin de thread. voilà ce que ça donne
+J'ai benchmarké Jev, le "modèle de décision" de TypeSafe sorti il y a 2 jours, contre Claude Haiku 4.5 sur 2 000 mails de phishing. Mêmes mails, même consigne, un appel par mail. Repo public à la fin. Thread.
 
 **2.**
 
-d'abord ce que jev fait bien : 239 ms par email depuis la france, dont 163 ms de réseau. haiku : 687 ms. et 0,038 $ pour 1 000 emails contre 0,462 $. 12x moins cher, 3x plus rapide. ça, le pitch ne ment pas
+Ce que Jev fait bien, c'est la vitesse et le prix. 239 ms par mail depuis la France (dont 163 ms de réseau) contre 687 ms pour Haiku. Et 4 centimes les 1 000 mails contre 46. 3x plus rapide, 12x moins cher. Là-dessus le pitch tient.
 
 **3.**
 
-ensuite la précision, et là c'est moins joli. jev : 62,6 % d'accuracy, 43 % de rappel sur le phishing, 18 % de faux positifs. haiku : 81,3 %, 76 %, 14 %. sur 2 000 emails l'écart est énorme, test de mcnemar p < 0,0001
+La précision par contre c'est une autre histoire. Jev a bon 62,6 % du temps, Haiku 81,3 %. Sur le phishing Jev en attrape 43 %, Haiku 76 %. Et Jev bloque 18 % des mails légitimes, Haiku 14 %. Sur 2 000 mails c'est pas du bruit, McNemar p < 0,0001.
 
 **4.**
 
-où jev se plante : il fait confiance aux domaines connus. phishing hébergé sur google docs : 1,5 % détecté. sur github pages : 17 %. et à l'inverse il flague 45 % des mails légitimes qui pointent vers un outil tiers genre brex ou monday.com
+Où Jev se plante. Il fait confiance aux domaines connus. Phishing hébergé sur Google Docs, 1,5 % détecté. GitHub Pages, 17 %. Et dans l'autre sens il flague 45 % des mails légitimes qui pointent vers un outil tiers genre Brex ou Monday.com
 
 **5.** (avec results/signals.png)
 
-le truc vraiment intéressant. dans le même appel j'ai posé 5 questions plus simples : "le lien est sur un hébergement gratuit ?", "l'expéditeur est un gmail qui parle au nom d'une boîte ?", etc. ces signaux seuls sont excellents : auroc 0,96 et 0,94, contre 0,69 pour le verdict global
+Le truc vraiment intéressant. Dans le même appel j'ai posé 5 questions plus simples. "Le lien est sur un hébergement gratuit ?", "L'expéditeur est un Gmail qui parle au nom d'une boîte ?", etc. Ces signaux seuls sont excellents. AUROC 0,96 et 0,94, contre 0,69 pour le verdict global.
 
 **6.**
 
-attention au piège : une simple liste de raccourcisseurs et d'hébergeurs gratuits, sans aucune ia, fait déjà 91,8 % sur ce dataset. le meilleur signal jev seul fait moins bien, 89,4 %. en combinant les 5 signaux par une régression entraînée sur une moitié et mesurée sur l'autre, on arrive à 95,0 %. et haiku, à qui j'ai posé exactement les 5 mêmes questions, fait 93,2 % de la même façon, écart non significatif. jev est mauvais pour juger, correct pour observer, pas magique
+Attention au piège. Une simple liste de raccourcisseurs et d'hébergeurs gratuits, sans aucune IA, fait déjà 91,8 % sur ce dataset. Le meilleur signal Jev seul fait moins, 89,4 %. En combinant les 5 signaux (régression entraînée sur une moitié, mesurée sur l'autre) on monte à 95,0 %. Et Haiku avec exactement les 5 mêmes questions fait 93,2 %, écart pas significatif. Jev observe bien, il juge mal, et y a rien de magique là-dedans.
 
 **7.**
 
-la calibration, l'angle que personne n'avait audité. jev : ece 0,154. entre 0,85 et 0,95 de proba il a raison 60 % du temps, surconfiant. au-dessus de 0,98 il a raison à 98 %, mais ça ne couvre que 7 % des emails. haiku : ece 0,097, mais il ne sort que 10 valeurs de proba différentes, 1 084 fois "0,95"
+La calibration, ce que personne avait audité. Jev, ECE 0,154. Quand il sort une proba entre 0,85 et 0,95 il a raison 60 % du temps. Surconfiant. Au-dessus de 0,98 il a raison à 98 % mais ça couvre que 7 % des mails. Haiku, ECE 0,097, mais il sort que 10 valeurs de proba différentes. 1 084 fois "0,95" mdr
 
 **8.**
 
-stabilité : j'ai tout repassé une deuxième fois. jev change d'avis sur 2,2 % des emails, écart moyen de proba 0,017, écart max 0,15. haiku à température 0 : 98 % de probas strictement identiques, 0,7 % de changements d'avis, mais quand il bouge il bouge fort, écart max 0,65. et 12 h plus tard sur 200 emails, même chose. jev n'est pas déterministe, il est juste stable
+Stabilité. J'ai tout repassé une deuxième fois. Jev change d'avis sur 2,2 % des mails, écart moyen de proba 0,017, max 0,15. Haiku à température 0 sort 98 % de probas strictement identiques et change d'avis sur 0,7 %, mais quand il bouge il bouge FORT, écart max 0,65. 12 h plus tard sur 200 mails, pareil. Jev est pas déterministe, il est stable.
 
 **9.**
 
-les limites, parce que sinon ça vaut rien : corps d'emails synthétiques (dataset phishnchips, avril 2026, urls réelles), un seul prompt par système, latence mesurée depuis la france vers des serveurs us, haiku sans thinking. et le résumé publié du dataset a des chiffres que je n'ai pas réussi à reproduire, tout est dans le rapport
+Les limites, parce que sans ça le thread vaut rien. Corps de mails synthétiques (dataset PhishNChips, avril 2026, URLs réelles). Un seul prompt par système. Latence mesurée depuis la France vers des serveurs US. Haiku sans thinking. Et le résumé publié du dataset a des chiffres que j'ai pas réussi à reproduire, tout est dans le rapport.
 
 **10.**
 
-conclusion perso : jev en classifieur "tout-en-un", non. jev en capteur de signaux atomiques, oui mais sans miracle : haiku fait des signaux aussi bons, pour 1 $ les 1 000 emails contre 0,04 $ et 5x plus lent. ce que tu achètes avec jev c'est le prix et la vitesse, pas l'intelligence. repo, rapport, code, tout est là : https://github.com/anisselbd/jev-phishing-bench
+Ma conclusion. Jev en classifieur tout-en-un, non. Jev en capteur de signaux atomiques, oui, mais Haiku fait des signaux aussi bons pour 1 $ les 1 000 mails contre 4 centimes, et 5x plus lent. Ce que vous achetez c'est le prix et la vitesse, pas l'intelligence. Repo, rapport, code, tout est là : https://github.com/anisselbd/jev-phishing-bench
 
 ---
 
 Notes pour la publication :
 - Ne pas arrondir 62,6 en 63 ni 81,3 en 81 dans les visuels, garder les mêmes chiffres partout.
+- Les prix sont en dollars catalogue (0,038 $ et 0,462 $ pour 1 000 mails). "4 centimes" et "46 centimes" sont des arrondis, le rapport a les valeurs exactes.
