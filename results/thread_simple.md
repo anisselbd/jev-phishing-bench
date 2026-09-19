@@ -1,6 +1,6 @@
 # Thread X grand public (@Lbdev__)
 
-Version sans jargon. Mêmes chiffres que results/report.md, arrondis à une décimale comme dans les images. Un tweet par idée, 8 tweets. Voix calquée sur les tweets du compte (majuscules normales, "ne" supprimé, lecteur tutoyé ou vouvoyé, phrases courtes).
+Version sans jargon, c'est le thread à poster. Mêmes chiffres que results/report.md, arrondis à une décimale comme dans les images. Un tweet par idée, 8 tweets plus un tweet de transition vers le thread technique, posté en réponse. Voix calquée sur les tweets du compte (majuscules normales, "ne" supprimé, lecteur tutoyé ou vouvoyé, phrases courtes).
 
 Images : simple_precision.png sur le 2, simple_speed_cost.png sur le 3, simple_signals.png sur le 6.
 
@@ -8,7 +8,7 @@ Images : simple_precision.png sur le 2, simple_speed_cost.png sur le 3, simple_s
 
 **1.**
 
-Une startup, TypeSafe, a sorti "Jev" il y a 2 jours. Une IA qui parle pas, elle répond juste oui, non, ou "73 % oui". Ils promettent 200x plus rapide et 400x moins cher que ChatGPT et compagnie. J'ai voulu vérifier sur un vrai problème, repérer des mails de phishing. Thread.
+TypeSafe a sorti il y a 2 jours une IA "400x moins chère que ChatGPT". Je l'ai testée sur 2 000 mails de phishing. Elle se trompe une fois sur trois, mais elle a quand même un vrai intérêt. Thread.
 
 **2.** (image : simple_precision.png)
 
@@ -37,6 +37,10 @@ Ce qui m'inquiète le plus. Jev donne un pourcentage de certitude censé être f
 **8.**
 
 Ma conclusion. Jev comme détecteur tout seul, non. Jev comme capteur de petits signaux que votre code assemble, oui, à condition de savoir que Haiku fait aussi bien pour 27x plus cher. Ce que vous achetez c'est le prix et la vitesse, pas l'intelligence. Tout le code, les mails et les chiffres sont publics : https://github.com/anisselbd/jev-phishing-bench
+
+**9.** (transition, en réponse au 8, puis le thread technique de thread.md à la suite)
+
+Pour ceux qui veulent les vrais chiffres, calibration, stabilité, intervalles de confiance, la version technique continue en dessous.
 
 ---
 

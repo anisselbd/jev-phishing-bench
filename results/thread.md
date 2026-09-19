@@ -1,12 +1,12 @@
 # Brouillon de thread X (@Lbdev__), version technique
 
-Chiffres de results/report.md du 17 septembre 2026. Un tweet par idée. Voix calquée sur les tweets du compte (majuscules normales, "ne" supprimé, lecteur tutoyé ou vouvoyé, phrases courtes, MAJUSCULES pour appuyer).
+Posté en réponse au tweet de transition de thread_simple.md, pas comme thread autonome. Chiffres de results/report.md du 17 septembre 2026. Un tweet par idée. Voix calquée sur les tweets du compte (majuscules normales, "ne" supprimé, lecteur tutoyé ou vouvoyé, phrases courtes, MAJUSCULES pour appuyer).
 
 ---
 
 **1.** (avec results/chart.png)
 
-J'ai benchmarké Jev, le "modèle de décision" de TypeSafe sorti il y a 2 jours, contre Claude Haiku 4.5 sur 2 000 mails de phishing. Mêmes mails, même consigne, un appel par mail. Repo public à la fin. Thread.
+Le protocole. Jev (TypeSafe, modèle jev-latest) contre Claude Haiku 4.5, sans thinking, sur les 2 000 mails de PhishNChips. Mêmes mails, même consigne, un appel par mail, appels séquentiels pour mesurer la latence proprement. Tout le code est dans le repo.
 
 **2.**
 
