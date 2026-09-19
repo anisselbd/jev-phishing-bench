@@ -1,9 +1,11 @@
-"""Versus image for the first tweet of the thread, dark theme, 1600 x 900.
+"""Versus image for the first tweet of the thread, dark theme, 1600 x 900, no sentence anywhere.
 
 results/hero_vs_llms.png  : Jev against the LLM crowd named in TypeSafe's pitch (Claude, GPT, Gemini, DeepSeek)
 results/hero_vs_haiku.png : Jev against Claude Haiku 4.5, the only model actually benchmarked
 
-Fonts are downloaded at runtime from Google Fonts into data/fonts (never committed).
+Inputs downloaded or provided at runtime, never committed:
+- data/fonts : Bebas Neue, Montserrat, Inter from Google Fonts (fetched here)
+- data/brand/typesafe_logo.jpg : the TypeSafe AI logo card (dark mark on pink), the cube mark is cut out of it
 
 Usage: uv run hero_image.py
 """
@@ -18,12 +20,14 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 from bench.common import RESULTS_DIR
-from charts import JEV, LLM, SURFACE, TEXT, TEXT_2
+from charts import LLM, SURFACE, TEXT
 
 FONT_DIR = Path("data/fonts")
+LOGO = Path("data/brand/typesafe_logo.jpg")
 UA = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:20.0) Gecko/20100101 Firefox/20.0"  # old UA so Google serves woff, which PIL reads
-FAMILIES = {"bebas": "Bebas+Neue", "montserrat": "Montserrat:700,900", "inter": "Inter:400,700,900"}
+FAMILIES = {"bebas": "Bebas+Neue", "montserrat": "Montserrat:900"}
 
+PINK = "#f48aa1"  # sampled from the TypeSafe logo card
 W, H = 1600, 900
 SS = 2  # supersampling factor
 
@@ -34,8 +38,8 @@ def fetch_fonts() -> dict[str, Path]:
     for key, fam in FAMILIES.items():
         req = urllib.request.Request(f"https://fonts.googleapis.com/css?family={fam}", headers={"User-Agent": UA})
         css = urllib.request.urlopen(req).read().decode()
-        for i, url in enumerate(re.findall(r"https://fonts\.gstatic\.com[^)]+", css)):
-            path = FONT_DIR / f"{key}-{i}.woff"
+        for url in re.findall(r"https://fonts\.gstatic\.com[^)]+", css):
+            path = FONT_DIR / f"{key}-{url.rsplit('/', 1)[1]}"
             if not path.exists():
                 path.write_bytes(urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": UA})).read())
             name = ImageFont.truetype(str(path), 20).getname()
@@ -45,6 +49,26 @@ def fetch_fonts() -> dict[str, Path]:
 
 def hexrgb(h: str) -> tuple[int, int, int]:
     return tuple(int(h[i : i + 2], 16) for i in (1, 3, 5))  # type: ignore[return-value]
+
+
+def cube_mark(color: str, height: int) -> Image.Image:
+    """Cut the cube mark out of the logo card: dark pixels left of the wordmark, recolored, transparent elsewhere."""
+    im = np.array(Image.open(LOGO).convert("RGB")).astype(int)
+    darkness = np.clip((430 - im.sum(axis=2)) / 200, 0, 1)  # 1 on the mark (sum < 230), 0 on the pink card (sum ~ 540)
+    dark = darkness > 0.5
+    sub = dark[80:320, 80:260]  # ignore the crop marks in the card's corners
+    rows = np.where(sub.any(axis=1))[0]
+    y0, y1 = 80 + rows.min(), 80 + rows.max()
+    cols = dark[y0 : y1 + 1, 80:260].sum(axis=0)
+    xs = np.where(cols > 0)[0]
+    x0 = 80 + xs.min()
+    x1 = x0 + int(np.argmax(cols[xs.min() :] == 0))  # first empty column after the mark, before the wordmark
+    a = darkness[y0 : y1 + 1, x0:x1]
+    rgba = np.zeros(a.shape + (4,), dtype=np.uint8)
+    rgba[..., :3] = hexrgb(color)
+    rgba[..., 3] = (a * 255).astype(np.uint8)
+    mark = Image.fromarray(rgba, "RGBA")
+    return mark.resize((round(mark.width * height / mark.height), height), Image.LANCZOS)
 
 
 def glow(size: tuple[int, int], center: tuple[float, float], color: str, radius: float, strength: float) -> Image.Image:
@@ -58,18 +82,13 @@ def glow(size: tuple[int, int], center: tuple[float, float], color: str, radius:
     return Image.fromarray(rgb, "RGBA")
 
 
-def text_size(draw: ImageDraw.ImageDraw, text: str, font: ImageFont.FreeTypeFont) -> tuple[int, int]:
-    box = draw.textbbox((0, 0), text, font=font)
-    return box[2] - box[0], box[3] - box[1]
-
-
-def render(fonts: dict[str, Path], right_lines: list[str], right_caption: str, out: Path) -> None:
+def render(fonts: dict[str, Path], right_lines: list[str], out: Path) -> None:
     w, h = W * SS, H * SS
     img = Image.new("RGBA", (w, h), hexrgb(SURFACE) + (255,))
 
-    # glows, blue left, orange right, blurred
-    img.alpha_composite(glow((w, h), (0.22 * w, 0.5 * h), JEV, 0.42 * w, 0.55))
-    img.alpha_composite(glow((w, h), (0.80 * w, 0.5 * h), LLM, 0.42 * w, 0.50))
+    # glows, pink left, orange right, blurred
+    img.alpha_composite(glow((w, h), (0.22 * w, 0.5 * h), PINK, 0.34 * w, 0.30))
+    img.alpha_composite(glow((w, h), (0.80 * w, 0.5 * h), LLM, 0.34 * w, 0.38))
     img = img.filter(ImageFilter.GaussianBlur(6 * SS))
 
     # diagonal split: a dark band with a thin light edge
@@ -91,39 +110,34 @@ def render(fonts: dict[str, Path], right_lines: list[str], right_caption: str, o
     bebas_mid = ImageFont.truetype(str(fonts["bebas-regular"]), int(170 * SS))
     bebas_small = ImageFont.truetype(str(fonts["bebas-regular"]), int(104 * SS))
     mont_black = ImageFont.truetype(str(fonts["montserrat-black"]), int(170 * SS))
-    mont_bold = ImageFont.truetype(str(fonts["montserrat-bold"]), int(30 * SS))
-    inter_bold = ImageFont.truetype(str(fonts["inter-bold"]), int(26 * SS))
-    inter = ImageFont.truetype(str(fonts["inter-regular"]), int(24 * SS))
     d = ImageDraw.Draw(img)
-    mid_y = 0.47 * h
+    mid_y = 0.5 * h
 
-    def stack(cx: float, lines: list[str], font: ImageFont.FreeTypeFont, color: str, gap: float) -> float:
-        """Draw lines centered on cx, block centered on mid_y. Returns the block's bottom y."""
+    def stack(cx: float, lines: list[str], font: ImageFont.FreeTypeFont, color: str, gap: float, center_y: float) -> tuple[float, float]:
+        """Draw lines centered on cx, block centered on center_y. Returns the block's top and bottom y."""
         boxes = [d.textbbox((0, 0), t, font=font) for t in lines]
         heights = [b[3] - b[1] for b in boxes]
         total = sum(heights) + gap * (len(lines) - 1)
-        y = mid_y - total / 2
+        top = y = center_y - total / 2
         for t, b, th in zip(lines, boxes, heights):
             d.text((cx - (b[2] - b[0]) / 2 - b[0], y - b[1]), t, font=font, fill=hexrgb(color))
             y += th + gap
-        return y - gap
+        return top, y - gap
 
-    def caption(cx: float, y: float, text: str, font: ImageFont.FreeTypeFont, color: str) -> float:
-        b = d.textbbox((0, 0), text, font=font)
-        d.text((cx - (b[2] - b[0]) / 2 - b[0], y - b[1]), text, font=font, fill=hexrgb(color))
-        return y + (b[3] - b[1])
-
-    # left: JEV
+    # left: cube mark above JEV, the pair centered as a block
     cx_left = 0.26 * w
-    bottom = stack(cx_left, ["JEV"], bebas, JEV, 0)
-    bottom = caption(cx_left, bottom + 0.045 * h, "TYPESAFE AI", mont_bold, TEXT)
-    caption(cx_left, bottom + 0.022 * h, "modèle de décision, sorti il y a 2 jours", inter, TEXT_2)
+    mark = cube_mark(PINK, int(0.17 * h))
+    gap = 0.04 * h
+    jev_h = d.textbbox((0, 0), "JEV", font=bebas)[3] - d.textbbox((0, 0), "JEV", font=bebas)[1]
+    block_top = mid_y - (mark.height + gap + jev_h) / 2
+    img.alpha_composite(mark, (int(cx_left - mark.width / 2), int(block_top)))
+    d = ImageDraw.Draw(img)
+    stack(cx_left, ["JEV"], bebas, PINK, 0, block_top + mark.height + gap + jev_h / 2)
 
     # right: the opponent(s)
     cx_right = 0.755 * w
     font = bebas_mid if len(right_lines) <= 2 else bebas_small
-    bottom = stack(cx_right, right_lines, font, LLM, 0.012 * h)
-    caption(cx_right, bottom + 0.045 * h, right_caption, mont_bold, TEXT)
+    stack(cx_right, right_lines, font, LLM, 0.012 * h, mid_y)
 
     # center VS on a dark disc
     cx, cy = 0.5 * w, mid_y
@@ -132,17 +146,8 @@ def render(fonts: dict[str, Path], right_lines: list[str], right_caption: str, o
     ImageDraw.Draw(disc).ellipse([cx - r, cy - r, cx + r, cy + r], fill=hexrgb(SURFACE) + (235,), outline=hexrgb(TEXT) + (90,), width=int(3 * SS))
     img.alpha_composite(disc)
     d = ImageDraw.Draw(img)
-    tw, th = text_size(d, "VS", mont_black)
     box = d.textbbox((0, 0), "VS", font=mont_black)
-    d.text((cx - tw / 2 - box[0], cy - th / 2 - box[1]), "VS", font=mont_black, fill=hexrgb(TEXT))
-
-    # top and bottom strips
-    top = "2 000 MAILS DE PHISHING  ·  MÊME CONSIGNE  ·  UN APPEL PAR MAIL"
-    tw, _ = text_size(d, top, inter_bold)
-    d.text((0.5 * w - tw / 2, 0.055 * h), top, font=inter_bold, fill=hexrgb(TEXT_2))
-    handle = "@Lbdev__"
-    tw, _ = text_size(d, handle, inter_bold)
-    d.text((0.5 * w - tw / 2, 0.905 * h), handle, font=inter_bold, fill=hexrgb(TEXT_2))
+    d.text((cx - (box[2] - box[0]) / 2 - box[0], cy - (box[3] - box[1]) / 2 - box[1]), "VS", font=mont_black, fill=hexrgb(TEXT))
 
     img = img.convert("RGB").resize((W, H), Image.LANCZOS)
     img.save(out, optimize=True)
@@ -151,8 +156,8 @@ def render(fonts: dict[str, Path], right_lines: list[str], right_caption: str, o
 
 def main() -> None:
     fonts = fetch_fonts()
-    render(fonts, ["CLAUDE", "GPT", "GEMINI", "DEEPSEEK"], "LES LLM CLASSIQUES", RESULTS_DIR / "hero_vs_llms.png")
-    render(fonts, ["CLAUDE", "HAIKU 4.5"], "ANTHROPIC", RESULTS_DIR / "hero_vs_haiku.png")
+    render(fonts, ["CLAUDE", "GPT", "GEMINI", "DEEPSEEK"], RESULTS_DIR / "hero_vs_llms.png")
+    render(fonts, ["CLAUDE", "HAIKU 4.5"], RESULTS_DIR / "hero_vs_haiku.png")
 
 
 if __name__ == "__main__":
