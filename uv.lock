@@ -329,6 +329,7 @@ dependencies = [
     { name = "httpx" },
     { name = "matplotlib" },
     { name = "numpy" },
+    { name = "pillow" },
     { name = "python-dotenv" },
     { name = "tldextract" },
 ]
@@ -338,6 +339,7 @@ requires-dist = [
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "matplotlib", specifier = ">=3.11.2" },
     { name = "numpy", specifier = ">=2.5.3" },
+    { name = "pillow", specifier = ">=12.3.0" },
     { name = "python-dotenv", specifier = ">=1.2.3" },
     { name = "tldextract", specifier = ">=5.3.2" },
 ]

@@ -2,7 +2,7 @@
 
 Version sans jargon, c'est le thread à poster. Mêmes chiffres que results/report.md, arrondis à une décimale comme dans les images. Un tweet par idée, 8 tweets plus un tweet de transition vers le thread technique, posté en réponse. Voix calquée sur les tweets du compte (majuscules normales, "ne" supprimé, lecteur tutoyé ou vouvoyé, phrases courtes).
 
-Images : simple_precision.png sur le 2, simple_speed_cost.png sur le 3, simple_signals.png sur le 6.
+Images : hero_vs_llms.png ou hero_vs_haiku.png sur le 1 (voir note en bas), simple_precision.png sur le 2, simple_speed_cost.png sur le 3, simple_signals.png sur le 6.
 
 ---
 
@@ -48,3 +48,4 @@ Notes pour la publication :
 - Précautions gardées volontairement : "sur ce jeu de mails" au tweet 6, "pas un coup de chance" au tweet 2 (test statistique dans le rapport).
 - Les limites (emails synthétiques, un seul prompt, latence depuis la France) sont dans le README, pas dans le thread grand public. Si quelqu'un demande, renvoyer au rapport.
 - Le thread technique reste dans thread.md pour les gens qui veulent les AUROC et les intervalles.
+- Image du tweet 1 : hero_vs_llms.png montre Jev face à Claude, GPT, Gemini et DeepSeek, c'est la promesse de TypeSafe ("400x moins cher que ChatGPT"), pas le protocole. Seul Claude Haiku 4.5 a été benchmarké. hero_vs_haiku.png est la version fidèle au test. Si hero_vs_llms.png est retenue, le tweet 2 doit rester tel quel (il nomme Haiku) pour que personne ne croie que GPT, Gemini ou DeepSeek ont été testés.
