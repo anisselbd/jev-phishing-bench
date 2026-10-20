@@ -1,5 +1,9 @@
 # Jev vs LLM: a phishing decision benchmark with a calibration audit
 
+**By [Anisse Lebadi](https://anisselebadi.com)** · [X @Lbdev__](https://x.com/Lbdev__) · [LinkedIn](https://www.linkedin.com/in/anisse-lebadi) · first published 17 September 2026
+
+> Cited by [Sophos](https://www.sophos.com/en-us/blog/jevs-paradox-hidden-cost-of-cheap-ai-decisions), [beri.net](https://www.beri.net/article/typesafe-jev-typed-decision-model-calibration-decomposition-shadow-eval), [AWS Builders on dev.to](https://dev.to/aws-builders/jev-after-eight-days-of-independent-tests-level-with-mid-price-llms-behind-the-frontier-1c60) and 80+ pages in 7 languages.
+
 Public, reproducible comparison of **Jev** (TypeSafe AI's System One model, launched 15 September 2026) against a
 classic LLM on one security decision: should an email agent click the link in this email?
 
@@ -179,3 +183,16 @@ CLAUDE.md           design decisions and rules for the coding agent
 - TypeSafe docs: https://docs.typesafe.ai (index: https://docs.typesafe.ai/llms.txt)
 - PhishNChips: https://huggingface.co/datasets/AreLit/PhishNChips
 - Every, "Mini vibe check: TypeSafe's Jev", the only independent test published before this one
+
+## How to cite
+
+Anisse Lebadi (2026). *jev-phishing-bench: Jev vs Claude Haiku 4.5 on 2,000 phishing emails.* GitHub,
+https://github.com/anisselbd/jev-phishing-bench
+
+Quoting the numbers? Please credit "Anisse Lebadi (jev-phishing-bench)". GitHub's "Cite this repository" button
+reads `CITATION.cff`.
+
+## License
+
+Code: MIT, see `LICENSE`. The PhishNChips dataset is downloaded at runtime, never committed, and stays under its
+own license (Hugging Face `AreLit/PhishNChips`).

@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "If you use or quote this benchmark, please cite it as below."
+title: "jev-phishing-bench: Jev vs Claude Haiku 4.5 on 2,000 phishing emails"
+type: software
+authors:
+  - given-names: Anisse
+    family-names: Lebadi
+    website: "https://anisselebadi.com"
+repository-code: "https://github.com/anisselbd/jev-phishing-bench"
+url: "https://github.com/anisselbd/jev-phishing-bench"
+date-released: 2026-09-17
+license: MIT
+keywords:
+  - Jev
+  - TypeSafe
+  - phishing detection
+  - calibration
+  - LLM evaluation
+  - benchmark
