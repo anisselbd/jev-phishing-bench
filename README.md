@@ -1,5 +1,7 @@
 # Jev vs LLM: a phishing decision benchmark with a calibration audit
 
+[![Featured on JevMade](https://jevmade.com/badges/featured-on-jevmade.svg)](https://jevmade.com/e/jev-phishing-bench)
+
 **By [Anisse Lebadi](https://anisselebadi.com)** · [X @Lbdev__](https://x.com/Lbdev__) · [LinkedIn](https://www.linkedin.com/in/anisse-lebadi) · first published 17 September 2026
 
 > Cited by [Sophos](https://www.sophos.com/en-us/blog/jevs-paradox-hidden-cost-of-cheap-ai-decisions), [beri.net](https://www.beri.net/article/typesafe-jev-typed-decision-model-calibration-decomposition-shadow-eval), [AWS Builders on dev.to](https://dev.to/aws-builders/jev-after-eight-days-of-independent-tests-level-with-mid-price-llms-behind-the-frontier-1c60) and 80+ pages in 7 languages.
